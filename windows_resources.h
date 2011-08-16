@@ -11,6 +11,7 @@
 
 namespace WINDOWS_RESOURCES_NAMESPACE
 {
+	using namespace COMMON_NAMESPACE;
 
 	namespace file
 	{
@@ -62,8 +63,46 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 		unique;
 	}
 
+	namespace com_interface
+	{
+		template<typename Interface>
+		struct tag {};
+
+		template<typename Interface>
+		Interface* unique_resource_invalid(tag<Interface>&) { return nullptr; }
+
+		template<typename Interface>
+		void unique_resource_reset(Interface* resource, tag<Interface>&) { resource->Release(); }
+
+		template<typename Interface>
+		struct make_unique : public type_trait<UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag<Interface>>>
+		{
+		};
+	}
+
+	template<typename Interface>
+	typename com_interface::make_unique<Interface>::type ComCreateInstance(CLSID classId, unique_hresult* hr = nullptr, DWORD clsContext = CLSCTX_LOCAL_SERVER)
+	{
+		typename com_interface::make_unique<Interface>::type result;
+		if (hr)
+		{
+			hr->reset(CoCreateInstance(classId, nullptr, clsContext, __uuidof(Interface), (LPVOID*)result.replace()));
+		}
+		else
+		{
+			unique_hresult::make(CoCreateInstance(classId, nullptr, clsContext, __uuidof(Interface), (LPVOID*)result.replace())).throw_if();
+		}
+		return std::move(result);
+	}
+
+	template<typename Interface>
+	unique_hresult ComCreateInstance(CLSID classId, UNIQUE_RESOURCE_NAMESPACE::unique_resource<com_interface::tag<Interface>>* result, DWORD clsContext = CLSCTX_LOCAL_SERVER)
+	{
+		return unique_hresult::make(CoCreateInstance(classId, nullptr, clsContext, __uuidof(Interface), (LPVOID*)result->replace()));
+	}
+
 	inline
-	unique_winerror LoadStringRaw(HINSTANCE instance, UINT id, const rg::range<WCHAR*>& space, rg::range<WCHAR*>* spaceUsed, size_t* spaceRequested)
+	unique_winerror LoadStringRaw(HINSTANCE instance, UINT id, const RANGE_NAMESPACE::range<WCHAR*>& space, RANGE_NAMESPACE::range<WCHAR*>* spaceUsed, size_t* spaceRequested)
 	{
 		if (spaceUsed)
 		{
@@ -117,14 +156,14 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 	unique_winerror LoadStdString(HINSTANCE instance, UINT id, std::wstring* string)
 	{
 		unique_winerror winerror(winerror_cast(ERROR_MORE_DATA));
-		rg::range<WCHAR*> spaceUsed;
+		RANGE_NAMESPACE::range<WCHAR*> spaceUsed;
 		size_t spaceRequested = 80;
 
 		while(winerror == winerror_cast(ERROR_MORE_DATA) && spaceRequested < 2048)
 		{
 			winerror.suppress();
 			string->resize(spaceRequested);
-			winerror = LoadStringRaw(instance, id, rg::make_range_raw(*string), &spaceUsed, &spaceRequested);
+			winerror = LoadStringRaw(instance, id, RANGE_NAMESPACE::make_range_raw(*string), &spaceUsed, &spaceRequested);
 		}
 
 		return winerror;

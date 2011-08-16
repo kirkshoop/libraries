@@ -49,7 +49,7 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 			return unspecified_bool<this_type>::get(ok());
 		}
 
-		pointer operator->() const;
+		type operator->() const;
 
 		void reset();
 		void reset(type resource);

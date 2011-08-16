@@ -1,4 +1,7 @@
 
+#ifndef UNIQUE_WINERROR_SOURCE
+#define UNIQUE_WINERROR_SOURCE
+
 namespace unique_winerror_def
 {
 	struct tag {};
@@ -32,3 +35,5 @@ inline unique_winerror::static_error winerror_cast(DWORD raw)
 {
 	return unique_winerror::cast(raw);
 }
+
+#endif // UNIQUE_WINERROR_SOURCE

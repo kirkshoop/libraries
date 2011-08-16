@@ -1,32 +1,12 @@
 
-#pragma once
-
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-// Windows Header Files:
-#include <windows.h>
-#include <winerror.h>
-#include <WindowsX.h>
-
-// C RunTime Header Files
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
-
-#include <new>
-#include <memory>
-#include <utility>
-#include <iterator>
-#include <exception>
-#include <unordered_map>
+#ifndef LIBRARIES_SOURCE
+#define LIBRARIES_SOURCE
 
 #define COMMON_NAMESPACE nscommon
 #include "common.h"
 
 #define RANGE_NAMESPACE nsrange
 #include "range.h"
-namespace rg=RANGE_NAMESPACE;
 
 #define UNWINDER_NAMESPACE nsunwinder
 #include "unwinder.h"
@@ -34,14 +14,29 @@ namespace rg=RANGE_NAMESPACE;
 #define UNIQUE_ERROR_NAMESPACE nsunqerr
 #include "unique_error.h"
 #include "unique_winerror.h"
+#include "unique_hresult.h"
 
 #define UNIQUE_RESOURCE_NAMESPACE nsunqrsrc
 #include "unique_resource.h"
 
 #define WINDOWS_RESOURCES_NAMESPACE nswinrsrc
 #include "windows_resources.h"
-namespace wr=WINDOWS_RESOURCES_NAMESPACE;
 
 #define WIN32_WINDOW_NAMESPACE nswin32window
 #include "win32_window.h"
-namespace win=WIN32_WINDOW_NAMESPACE;
+
+#ifndef LIBRARIES_NAMESPACE
+#error LIBRARIES_NAMESPACE must be defined
+#endif
+
+namespace LIBRARIES_NAMESPACE
+{
+	using namespace COMMON_NAMESPACE;
+	using namespace RANGE_NAMESPACE;
+	using namespace UNIQUE_ERROR_NAMESPACE;
+	using namespace UNIQUE_RESOURCE_NAMESPACE;
+	using namespace WINDOWS_RESOURCES_NAMESPACE;
+	using namespace WIN32_WINDOW_NAMESPACE;
+}
+
+#endif // LIBRARIES_SOURCE

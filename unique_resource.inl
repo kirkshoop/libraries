@@ -38,9 +38,9 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 	}
 
 	template<typename ResourceTag>
-	typename unique_resource<ResourceTag>::pointer unique_resource<ResourceTag>::operator->() const
+	typename unique_resource<ResourceTag>::type unique_resource<ResourceTag>::operator->() const
 	{
-		return std::addressof(resource);
+		return resource;
 	}
 
 	template<typename ResourceTag>
