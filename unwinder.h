@@ -50,12 +50,14 @@ namespace UNWINDER_NAMESPACE
 
 #define MAKE_IDENTIFIER(Prefix) Prefix ## __LINE__
 
-#define ON_UNWIND(Function) \
-	auto MAKE_IDENTIFIER(uwfunc_) = (Function); \
-	UNWINDER_NAMESPACE::unwinder<decltype(MAKE_IDENTIFIER(uwfunc_))> MAKE_IDENTIFIER(unwind_)(std::addressof(MAKE_IDENTIFIER(uwfunc_)))
+#define ON_UNWIND(Name, Function) \
+	ON_UNWIND_EXPLICIT(uwfunc_ ## Name, Name, Function)
 
-#define ON_UNWIND_NAMED(Name, Function) \
-	auto uwfunc_ ## Name = (Function); \
-	UNWINDER_NAMESPACE::unwinder<decltype(uwfunc_ ## Name)> Name(std::addressof(uwfunc_ ## Name))
+#define ON_UNWIND_AUTO(Function) \
+	ON_UNWIND_EXPLICIT(MAKE_IDENTIFIER(uwfunc_), MAKE_IDENTIFIER(unwind_), Function)
+
+#define ON_UNWIND_EXPLICIT(FunctionName, UnwinderName, Function) \
+	auto FunctionName = (Function); \
+	UNWINDER_NAMESPACE::unwinder<decltype(FunctionName)> UnwinderName(std::addressof(FunctionName))
 
 #endif // UNWINDER_SOURCE

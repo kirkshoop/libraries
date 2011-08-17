@@ -26,9 +26,9 @@ inline unique_winerror make_winerror_if(BOOL is_last_error)
 	unique_winerror result;
 	if (!is_last_error)
 	{
-		return result.reset(GetLastError());
+		return std::move(result.reset(GetLastError()));
 	}
-	return result;
+	return std::move(result);
 }
 
 inline unique_winerror::static_error winerror_cast(DWORD raw)

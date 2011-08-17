@@ -27,7 +27,7 @@ namespace WIN32_WINDOW_NAMESPACE
 		tag;
 
 		typedef
-			decltype(window_class_traits(instance_of<tag>::value))
+			decltype(window_class_traits(tag()))
 		traits;
 
 		static ATOM Register();

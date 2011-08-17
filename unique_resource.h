@@ -46,7 +46,7 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 
 		operator typename unspecified_bool<this_type>::type() const
 		{
-			return unspecified_bool<this_type>::get(ok());
+			return unspecified_bool<this_type>::get(!empty());
 		}
 
 		type operator->() const;
@@ -58,6 +58,8 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 		type release();
 
 		type get() const;
+
+		bool empty() const;
 
 		void swap(unique_resource& other);
 

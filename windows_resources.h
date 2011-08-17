@@ -13,92 +13,124 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 {
 	using namespace COMMON_NAMESPACE;
 
-	namespace file
+	namespace detail
 	{
-		struct tag {};
-		HANDLE unique_resource_invalid(tag&) { return INVALID_HANDLE_VALUE; }
-		void unique_resource_reset(HANDLE resource, tag&) { CloseHandle(resource); }
-		typedef
-			UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag>
-		unique;
-	}
-
-	namespace window
-	{
-		struct tag {};
-		inline HWND unique_resource_invalid(tag&) { return NULL; }
-		inline void unique_resource_reset(HWND resource, tag&) { CloseWindow(resource); }
-		typedef
-			UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag>
-		unique;
-	}
-
-	namespace gdi_delete_dc
-	{
-		struct tag {};
-		inline HDC unique_resource_invalid(tag&) { return NULL; }
-		inline void unique_resource_reset(HDC resource, tag&) { DeleteDC(resource); }
-		typedef
-			UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag>
-		unique;
-	}
-
-	namespace gdi_release_dc
-	{
-		struct tag {};
-		inline std::pair<HWND, HDC> unique_resource_invalid(tag&) { return std::make_pair(nullptr, nullptr); }
-		inline void unique_resource_reset(std::pair<HWND, HDC> resource, tag&) { ReleaseDC(resource.first, resource.second); }
-		typedef
-			UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag>
-		unique;
-	}
-
-	namespace gdi_end_paint
-	{
-		struct tag {};
-		inline std::pair<HWND, PAINTSTRUCT*> unique_resource_invalid(tag&) { return std::make_pair(nullptr, nullptr); }
-		inline void unique_resource_reset(std::pair<HWND, PAINTSTRUCT*> resource, tag&) { EndPaint(resource.first, resource.second); }
-		typedef
-			UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag>
-		unique;
-	}
-
-	namespace com_interface
-	{
-		template<typename Interface>
-		struct tag {};
-
-		template<typename Interface>
-		Interface* unique_resource_invalid(tag<Interface>&) { return nullptr; }
-
-		template<typename Interface>
-		void unique_resource_reset(Interface* resource, tag<Interface>&) { resource->Release(); }
-
-		template<typename Interface>
-		struct make_unique : public type_trait<UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag<Interface>>>
+		template<typename Resource>
+		std::pair<unique_winerror, Resource>
+		winerror_and_resource(typename Resource::type resource)
 		{
-		};
+			Resource result;
+			result.reset(resource);
+			return std::make_pair(make_winerror_if(!result), std::move(result));
+		}
 	}
+
+	namespace detail
+	{
+		namespace file
+		{
+			struct tag {};
+			inline HANDLE unique_resource_invalid(tag&&) { return INVALID_HANDLE_VALUE; }
+			inline void unique_resource_reset(HANDLE resource, tag&&) { CloseHandle(resource); }
+		}
+	}
+	typedef
+		UNIQUE_RESOURCE_NAMESPACE::unique_resource<detail::file::tag>
+	unique_file;
+
+	inline
+	auto winerror_and_file(HANDLE result) -> decltype(detail::winerror_and_resource<unique_file>(result))
+	{
+		return detail::winerror_and_resource<unique_file>(result);
+	}
+
+	namespace detail
+	{
+		namespace close_window
+		{
+			struct tag {};
+			inline HWND unique_resource_invalid(tag&&) { return NULL; }
+			inline void unique_resource_reset(HWND resource, tag&&) { CloseWindow(resource); }
+		}
+	}
+	typedef
+		UNIQUE_RESOURCE_NAMESPACE::unique_resource<detail::close_window::tag>
+	unique_close_window;
+
+	inline
+	auto winerror_and_close_window(HWND result) -> decltype(detail::winerror_and_resource<unique_close_window>(result))
+	{
+		return detail::winerror_and_resource<unique_close_window>(result);
+	}
+
+	namespace detail
+	{
+		namespace gdi_delete_dc
+		{
+			struct tag {};
+			inline HDC unique_resource_invalid(tag&&) { return NULL; }
+			inline void unique_resource_reset(HDC resource, tag&&) { DeleteDC(resource); }
+		}
+	}
+	typedef
+		UNIQUE_RESOURCE_NAMESPACE::unique_resource<detail::gdi_delete_dc::tag>
+	unique_gdi_delete_dc;
+
+	namespace detail
+	{
+		namespace gdi_release_dc
+		{
+			struct tag {};
+			inline std::pair<HWND, HDC> unique_resource_invalid(tag&&) { return std::make_pair(nullptr, nullptr); }
+			inline void unique_resource_reset(std::pair<HWND, HDC> resource, tag&&) { ReleaseDC(resource.first, resource.second); }
+		}
+	}
+	typedef
+		UNIQUE_RESOURCE_NAMESPACE::unique_resource<detail::gdi_release_dc::tag>
+	unique_gdi_release_dc;
+
+	namespace detail
+	{
+		namespace gdi_end_paint
+		{
+			struct tag {};
+			inline std::pair<HWND, PAINTSTRUCT*> unique_resource_invalid(tag&&) { return std::make_pair(nullptr, nullptr); }
+			inline void unique_resource_reset(std::pair<HWND, PAINTSTRUCT*> resource, tag&&) { EndPaint(resource.first, resource.second); }
+		}
+	}
+	typedef
+		UNIQUE_RESOURCE_NAMESPACE::unique_resource<detail::gdi_end_paint::tag>
+	unique_gdi_end_paint;
+
+	namespace detail
+	{
+		namespace com_interface
+		{
+			template<typename Interface>
+			struct tag {};
+
+			template<typename Interface>
+			Interface* unique_resource_invalid(tag<Interface>&&) { return nullptr; }
+
+			template<typename Interface>
+			void unique_resource_reset(Interface* resource, tag<Interface>&&) { resource->Release(); }
+		}
+	}
+	template<typename Interface>
+	struct unique_com_interface : public type_trait<UNIQUE_RESOURCE_NAMESPACE::unique_resource<detail::com_interface::tag<Interface>>>
+	{
+	};
 
 	template<typename Interface>
-	typename com_interface::make_unique<Interface>::type ComCreateInstance(CLSID classId, unique_hresult* hr = nullptr, DWORD clsContext = CLSCTX_LOCAL_SERVER)
+	std::pair<unique_hresult, typename unique_com_interface<Interface>::type> 
+	ComCreateInstance(CLSID classId, DWORD clsContext = CLSCTX_LOCAL_SERVER, LPUNKNOWN outer = nullptr)
 	{
-		typename com_interface::make_unique<Interface>::type result;
-		if (hr)
-		{
-			hr->reset(CoCreateInstance(classId, nullptr, clsContext, __uuidof(Interface), (LPVOID*)result.replace()));
-		}
-		else
-		{
-			unique_hresult::make(CoCreateInstance(classId, nullptr, clsContext, __uuidof(Interface), (LPVOID*)result.replace())).throw_if();
-		}
-		return std::move(result);
-	}
+		unique_hresult hr;
+		typename unique_com_interface<Interface>::type result;
 
-	template<typename Interface>
-	unique_hresult ComCreateInstance(CLSID classId, UNIQUE_RESOURCE_NAMESPACE::unique_resource<com_interface::tag<Interface>>* result, DWORD clsContext = CLSCTX_LOCAL_SERVER)
-	{
-		return unique_hresult::make(CoCreateInstance(classId, nullptr, clsContext, __uuidof(Interface), (LPVOID*)result->replace()));
+		hr.reset(CoCreateInstance(classId, outer, clsContext, __uuidof(Interface), (LPVOID*)result.replace()));
+
+		return std::make_pair(std::move(hr), std::move(result));
 	}
 
 	inline
@@ -153,20 +185,26 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 	}
 
 	inline
-	unique_winerror LoadStdString(HINSTANCE instance, UINT id, std::wstring* string)
+	std::pair<unique_winerror, std::wstring> LoadStdString(HINSTANCE instance, UINT id)
 	{
-		unique_winerror winerror(winerror_cast(ERROR_MORE_DATA));
+		unique_winerror winerror;
+		std::wstring result;
 		RANGE_NAMESPACE::range<WCHAR*> spaceUsed;
 		size_t spaceRequested = 80;
 
-		while(winerror == winerror_cast(ERROR_MORE_DATA) && spaceRequested < 2048)
+		while(spaceRequested < 2048)
 		{
-			winerror.suppress();
-			string->resize(spaceRequested);
-			winerror = LoadStringRaw(instance, id, RANGE_NAMESPACE::make_range_raw(*string), &spaceUsed, &spaceRequested);
+			result.resize(spaceRequested);
+			winerror = LoadStringRaw(instance, id, RANGE_NAMESPACE::make_range_raw(result), &spaceUsed, &spaceRequested);
+			if (winerror == winerror_cast(ERROR_MORE_DATA))
+			{
+				winerror.suppress();
+				continue;
+			}
+			break;
 		}
 
-		return winerror;
+		return std::make_pair(std::move(winerror), std::move(result));
 	}
 }
 

@@ -107,7 +107,10 @@ namespace WIN32_WINDOW_NAMESPACE
 		return nohandler(); \
 	}
 
+#pragma warning(push)
+#pragma warning( disable : 4003) //not enough actual parameters for macro
 #include "win32_messages.h"
+#pragma warning (pop)
 
 #undef WINDOW_MESSAGE_OPTIONAL
 

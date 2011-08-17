@@ -141,6 +141,10 @@ namespace UNIQUE_ERROR_NAMESPACE
 			: value(other.value)
 			, disposition(Disposition::Initiated)
 		{
+			if (value != unique_error_default(tag()))
+			{
+				unique_error_on_initiated(value, tag());
+			}
 		}
 
 		unique_error(unique_error&& other)
@@ -186,8 +190,15 @@ namespace UNIQUE_ERROR_NAMESPACE
 			{
 				std::terminate();
 			}
+
 			value = raw;
 			disposition = Disposition::Unchecked;
+
+			if (value != unique_error_default(tag()))
+			{
+				unique_error_on_reset(value, tag());
+			}
+
 			return *this;
 		}
 
@@ -196,6 +207,11 @@ namespace UNIQUE_ERROR_NAMESPACE
 			type result = value;
 			reset();
 			return result;
+		}
+
+		type get() const
+		{
+			return value;
 		}
 
 		bool try_ok() const

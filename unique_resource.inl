@@ -32,8 +32,7 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 	template<typename ResourceTag>
 	unique_resource<ResourceTag>& unique_resource<ResourceTag>::operator=(unique_resource other)
 	{
-		using std::swap;
-		swap(other, *this);
+		swap(other);
 		return *this;
 	}
 
@@ -79,6 +78,12 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 	typename unique_resource<ResourceTag>::type unique_resource<ResourceTag>::get() const
 	{
 		return resource;
+	}
+
+	template<typename ResourceTag>
+	bool unique_resource<ResourceTag>::empty() const
+	{
+		return resource == unique_resource_invalid(tag());
 	}
 
 	template<typename ResourceTag>
