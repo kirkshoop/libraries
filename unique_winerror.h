@@ -17,6 +17,13 @@ namespace unique_winerror_def
 	}
 }
 
+// 
+//
+// implementations of these must be included in the final module
+//
+void unique_error_report_initiated(DWORD value, unique_winerror_def::tag&&);
+void unique_error_report_reset(DWORD value, unique_winerror_def::tag&&);
+
 typedef
 	UNIQUE_ERROR_NAMESPACE::unique_error<unique_winerror_def::tag>
 unique_winerror;
@@ -37,3 +44,17 @@ inline unique_winerror::static_error winerror_cast(DWORD raw)
 }
 
 #endif // UNIQUE_WINERROR_SOURCE
+
+#ifdef UNIQUE_WINERROR_DEFINE_REPORTS
+void unique_error_report_initiated(DWORD value, unique_winerror_def::tag&&)
+{
+	static DWORD anchor;
+	anchor = value;
+}
+
+void unique_error_report_reset(DWORD value, unique_winerror_def::tag&&)
+{
+	static DWORD anchor;
+	anchor = value;
+}
+#endif

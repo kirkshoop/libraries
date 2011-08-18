@@ -143,7 +143,7 @@ namespace UNIQUE_ERROR_NAMESPACE
 		{
 			if (value != unique_error_default(tag()))
 			{
-				unique_error_on_initiated(value, tag());
+				unique_error_report_initiated(value, tag());
 			}
 		}
 
@@ -196,7 +196,7 @@ namespace UNIQUE_ERROR_NAMESPACE
 
 			if (value != unique_error_default(tag()))
 			{
-				unique_error_on_reset(value, tag());
+				unique_error_report_reset(value, tag());
 			}
 
 			return *this;
