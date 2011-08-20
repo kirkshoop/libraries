@@ -11,8 +11,6 @@ namespace WIN32_WINDOW_NAMESPACE
 	//static
 	ATOM window_class<WindowClassTag>::Register()
 	{
-		use_types<hwndToTypes>();
-
 		WNDCLASSEX wcex = {};
 		wcex.cbSize = sizeof(WNDCLASSEX);
 
@@ -34,8 +32,6 @@ namespace WIN32_WINDOW_NAMESPACE
 	//static
 	ATOM window_class<WindowClassTag>::Register(T&& t)
 	{
-		use_types<hwndToTypes>();
-
 		WNDCLASSEX wcex = {};
 		wcex.cbSize = sizeof(WNDCLASSEX);
 
@@ -55,7 +51,7 @@ namespace WIN32_WINDOW_NAMESPACE
 	template<typename Type>
 	struct Context
 	{
-		std::shared_ptr<Type> type;
+		Type* type;
 		HWND window;
 		UINT message;
 		WPARAM wParam;
@@ -114,13 +110,70 @@ namespace WIN32_WINDOW_NAMESPACE
 
 #undef WINDOW_MESSAGE_OPTIONAL
 
-	template<typename WindowClassTag>
-	template<typename Instance>
-	// static 
-	typename Instance& window_class<WindowClassTag>::use_types()
-	{
-		static Instance instance;
-		return instance;
+ 	template<typename WindowClassTag> 
+	auto optional_window_class_insert(HWND hwnd, WindowClassTag&&, int) -> decltype(window_class_insert(hwnd, WindowClassTag()))
+	{ 
+		return window_class_insert(hwnd, WindowClassTag());
+	} 
+
+ 	template<typename WindowClassTag> 
+	bool optional_window_class_insert(HWND hwnd, WindowClassTag&&, ...) 
+	{ 
+		typedef
+			typename window_class<WindowClassTag>::traits::type
+		Type;
+
+		std::unique_ptr<Type> type(new (std::nothrow) Type);
+		if (!type)
+		{
+			return false;
+		}
+
+		SetLastError(0);
+
+		auto result = SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(type.get()));
+		ON_UNWIND(UserDataUnwind, [&]{SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(nullptr));});
+
+		unique_winerror winerror = make_winerror_if(!result);
+
+		if (!winerror)
+		{
+			return false;
+		}
+
+		if (!!result)
+		{
+			return false;
+		}
+
+		type.release();
+		UserDataUnwind.dismiss();
+		return true;
+	}
+
+ 	template<typename WindowClassTag> 
+	auto optional_window_class_find(HWND hwnd, WindowClassTag&&, int) -> decltype(window_class_find(hwnd, WindowClassTag()))
+	{ 
+		return window_class_find(hwnd, WindowClassTag());
+	} 
+
+ 	template<typename WindowClassTag> 
+	typename window_class<WindowClassTag>::traits::type* optional_window_class_find(HWND hwnd, WindowClassTag&&, ...) 
+	{ 
+		return reinterpret_cast<typename window_class<WindowClassTag>::traits::type*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+	}
+
+ 	template<typename Type, typename WindowClassTag> 
+	auto optional_window_class_erase(HWND hwnd, Type* type, WindowClassTag&&, int) -> decltype(window_class_erase(hwnd, type, WindowClassTag()))
+	{ 
+		return window_class_erase(hwnd, type, WindowClassTag());
+	} 
+
+ 	template<typename Type, typename WindowClassTag> 
+	void optional_window_class_erase(HWND hwnd, Type* type, WindowClassTag&&, ...) 
+	{ 
+		SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(nullptr));
+		delete type;
 	}
 
 	template<typename WindowClassTag>
@@ -144,25 +197,19 @@ namespace WIN32_WINDOW_NAMESPACE
 		LRESULT result = 0;
 		BOOL handled = FALSE;
 
-		auto& types = use_types<hwndToTypes>();
-
 		if (message == WM_NCCREATE)
 		{
-			try
-			{
-				types.insert(std::make_pair(hWnd, std::make_shared<traits::type>()));
-			}
-			catch(const std::bad_alloc&)
+			if (!optional_window_class_insert(hWnd, tag(), 0))
 			{
 				return FALSE;
 			}
 		}
 
-		auto type = types.find(hWnd);
+		auto type = optional_window_class_find(hWnd, tag(), 0);
 
-		if (type != types.end())
+		if (type)
 		{
-			Context<traits::type> context = {type->second, hWnd, message, wParam, lParam, &handled, &result};
+			Context<traits::type> context = {type, hWnd, message, wParam, lParam, &handled, &result};
 
 #			define WINDOW_MESSAGE_OPTIONAL( CapitalMessage, CasedMessage, ParamCount, ...) \
 						HANDLE_WM_ ## CapitalMessage(hWnd, wParam, lParam, optional ## CasedMessage(&context, 0));
@@ -173,7 +220,7 @@ namespace WIN32_WINDOW_NAMESPACE
 
 			if (message == WM_NCDESTROY)
 			{
-				types.erase(type);
+				optional_window_class_erase(hWnd, type, tag(), 0);
 			}
 
 			if (handled)

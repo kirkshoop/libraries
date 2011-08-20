@@ -36,13 +36,6 @@ namespace WIN32_WINDOW_NAMESPACE
 		static ATOM Register(T&& t);
 
 	private:
-		typedef
-			std::unordered_map<HWND, std::shared_ptr<typename traits::type>>
-		hwndToTypes;
-
-		template<typename Instance>
-		static Instance& use_types();
-
 		static LRESULT CALLBACK WindowCallback(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 		static LRESULT CALLBACK WindowCallbackSafe(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 

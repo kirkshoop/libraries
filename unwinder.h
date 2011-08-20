@@ -48,8 +48,6 @@ namespace UNWINDER_NAMESPACE
 
 }
 
-#define MAKE_IDENTIFIER(Prefix) Prefix ## __LINE__
-
 #define ON_UNWIND(Name, Function) \
 	ON_UNWIND_EXPLICIT(uwfunc_ ## Name, Name, Function)
 
