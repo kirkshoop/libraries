@@ -44,10 +44,7 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 		unique_resource(unique_resource&& other);
 		unique_resource& operator=(unique_resource other);
 
-		operator typename unspecified_bool<this_type>::type() const
-		{
-			return unspecified_bool<this_type>::get(!empty());
-		}
+		operator typename unspecified_bool<this_type>::type() const;
 
 		type operator->() const;
 

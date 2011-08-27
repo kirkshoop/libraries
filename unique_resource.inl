@@ -87,6 +87,12 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 	}
 
 	template<typename ResourceTag>
+	unique_resource<ResourceTag>::operator typename unspecified_bool<unique_resource<ResourceTag>>::type() const
+	{
+		return unspecified_bool<this_type>::get(!empty());
+	}
+
+	template<typename ResourceTag>
 	void unique_resource<ResourceTag>::swap(unique_resource& other)
 	{
 		using std::swap;

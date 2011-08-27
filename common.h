@@ -86,17 +86,26 @@ namespace COMMON_NAMESPACE
 	class unspecified_bool
 	{
 	private:
-		static void function (T) {};
+		inline void bool_true () {};
 	public:
 		typedef
-			decltype(&function)
-		type;
+			void (unspecified_bool::*type)();
 
 		static type get(bool value)
 		{
-			return value ? &function : nullptr;
+			return value ? &unspecified_bool::bool_true : nullptr;
 		}
 	};
+
+	template<typename L, typename R>
+	bool operator==(typename unspecified_bool<L>::type, typename unspecified_bool<R>::type);
+
+	template<typename L, typename R>
+	bool operator!=(typename unspecified_bool<L>::type, typename unspecified_bool<R>::type);
+
+	template<typename L, typename R>
+	bool operator<(typename unspecified_bool<L>::type, typename unspecified_bool<R>::type);
+
 
 	template<typename T>
 	struct type_trait

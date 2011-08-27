@@ -31,7 +31,8 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 		{
 			struct tag {};
 			inline HANDLE unique_resource_invalid(tag&&) { return INVALID_HANDLE_VALUE; }
-			inline void unique_resource_reset(HANDLE resource, tag&&) { CloseHandle(resource); }
+			inline void unique_resource_reset(HANDLE resource, tag&&) { 
+				CloseHandle(resource); }
 		}
 	}
 	typedef

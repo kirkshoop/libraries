@@ -209,7 +209,8 @@ namespace RANGE_NAMESPACE
 
 		reference   back() const
 		{
-			return *--end();
+			auto result = endIterator;
+			return *--result;
 		}
 
 		reference   operator[]( difference_type at ) const
@@ -335,23 +336,79 @@ namespace RANGE_NAMESPACE
 
     };
 
+	// external construction
+	template< class Iterator >
+	range<Iterator>
+	make_range( const Iterator& begin, const Iterator& end )
+	{
+		return range<Iterator>(begin,end);
+	}
+   
+	template< class Range >
+	range<typename range_iterator<Range>::type> 
+	make_range( Range&& r )
+	{
+		return range<typename range_iterator<Range>::type>(r);
+	}
+
+	template< class Range >
+	auto
+	make_range_raw( Range&& r ) -> decltype(RANGE_NAMESPACE::make_range(&r[0], &r[0] + RANGE_NAMESPACE::size(r)))
+	{
+		return RANGE_NAMESPACE::make_range(&r[0], &r[0] + RANGE_NAMESPACE::size(r));
+	}
+
+	template< class Range >
+	range<typename range_iterator<Range>::type> 
+	make_range( Range&& r, typename range_difference<Range>::type advance_begin,
+						   typename range_difference<Range>::type advance_end )
+	{
+		range<typename range_iterator<Range>::type> tmp(r); 
+		tmp.advance_begin(N); 
+		tmp.advance_end(M); 
+		return tmp;
+	}
+
 	// comparison
 	template< class Iterator, class Iterator2 >
-	bool operator==( const range<Iterator>& l, const range<Iterator2>& r )
+	bool operator==( range<Iterator> l, range<Iterator2> r )
 	{
-		return std::equal( RANGE_NAMESPACE::begin(l), RANGE_NAMESPACE::end(l), RANGE_NAMESPACE::begin(r) );
+		for(;!l.empty() && !r.empty(); l.advance_begin(1), r.advance_begin(1))
+		{
+			if (l.front() != r.front())
+			{
+				return false;
+			}
+		}
+		return l.empty() && r.empty();
 	}
 
 	template< class Iterator, class Range >
 	bool operator==( const range<Iterator>& l, const Range& r )
 	{
-		return std::equal( RANGE_NAMESPACE::begin(l), RANGE_NAMESPACE::end(l), RANGE_NAMESPACE::begin(r) );
+		auto rrange = make_range(r);
+		for(;!l.empty() && !rrange.empty(); l.advance_begin(1), rrange.advance_begin(1))
+		{
+			if (l.front() != rrange.front())
+			{
+				return false;
+			}
+		}
+		return l.empty() && rrange.empty();
 	}
 
 	template< class Iterator, class Range >
 	bool operator==( const Range& l, const range<Iterator>& r )
 	{
-		return std::equal( RANGE_NAMESPACE::begin(l), RANGE_NAMESPACE::end(l), RANGE_NAMESPACE::begin(r) );
+		auto lrange = make_range(l);
+		for(;!lrange.empty() && !r.empty(); lrange.advance_begin(1), r.advance_begin(1))
+		{
+			if (lrange.front() != r.front())
+			{
+				return false;
+			}
+		}
+		return lrange.empty() && r.empty();
 	}
 
 	template< class Iterator, class Iterator2 >
@@ -408,38 +465,6 @@ namespace RANGE_NAMESPACE
 		return static_cast<sub_range<Range>::base_type>(l) < static_cast<sub_range<Range2>::base_type>(r);
 	}
 
-	// external construction
-	template< class Iterator >
-	range<Iterator>
-	make_range( const Iterator& begin, const Iterator& end )
-	{
-		return range<Iterator>(begin,end);
-	}
-   
-	template< class Range >
-	range<typename range_iterator<Range>::type> 
-	make_range( Range&& r )
-	{
-		return range<typename range_iterator<Range>::type>(r);
-	}
-
-	template< class Range >
-	auto
-	make_range_raw( Range&& r ) -> decltype(RANGE_NAMESPACE::make_range(&r[0], &r[0] + RANGE_NAMESPACE::size(r)))
-	{
-		return RANGE_NAMESPACE::make_range(&r[0], &r[0] + RANGE_NAMESPACE::size(r));
-	}
-
-	template< class Range >
-	range<typename range_iterator<Range>::type> 
-	make_range( Range&& r, typename range_difference<Range>::type advance_begin,
-						   typename range_difference<Range>::type advance_end )
-	{
-		range<typename range_iterator<Range>::type> tmp(r); 
-		tmp.advance_begin(N); 
-		tmp.advance_end(M); 
-		return tmp;
-	}
            
 	template< class CopyableRange, class Range >      
 	CopyableRange copy_range( const Range& r )
@@ -452,6 +477,18 @@ namespace RANGE_NAMESPACE
 	distance( const ForwardRange& r )
 	{
 		return std::distance(RANGE_NAMESPACE::begin(r),RANGE_NAMESPACE::end(r));
+	}
+
+	template< class Range >
+	range<typename range_iterator<Range>::type> 
+	as_literal( Range&& r )
+	{
+		auto result = range<typename range_iterator<Range>::type>(r);
+		while (!result.empty() && result.back() == 0)
+		{
+			result.advance_end(-1);
+		}
+		return result;
 	}
 
 }
