@@ -18,13 +18,7 @@ namespace UNWINDER_NAMESPACE
 		{
 			if (!!function)
 			{
-				__try
-				{
-					(*function)();
-				}
-				__except(FailFastFilter(GetExceptionInformation()))
-				{
-				}
+				FAIL_FAST_ON_THROW([&]{(*function)();});
 			}
 		}
 

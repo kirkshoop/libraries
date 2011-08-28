@@ -74,6 +74,11 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
 #define MAKE_IDENTIFIER(Prefix) MAKE_IDENTIFIER_EXPLICIT(Prefix, __LINE__)
 
+#define FAIL_FAST_FILTER() \
+	__except(COMMON_NAMESPACE::FailFastFilter(GetExceptionInformation())) \
+	{ \
+	}
+
 namespace COMMON_NAMESPACE
 {
 	template<typename T>
@@ -120,10 +125,35 @@ namespace COMMON_NAMESPACE
 	LONG WINAPI FailFastFilter(__in  struct _EXCEPTION_POINTERS *exceptionInfo)
 	{
 		RaiseFailFastException(exceptionInfo->ExceptionRecord, exceptionInfo->ContextRecord, 0);
-		return EXCEPTION_CONTINUE_EXECUTION;
+		return EXCEPTION_CONTINUE_SEARCH;
 	}
 
+	template<typename Function>
+	auto FailFastOnThrow(Function&& function) -> decltype(std::forward<Function>(function)())
+	{
+		//
+		// __ try must be isolated in its own function in order for the 
+		// compiler to reason about C++ unwind in the calling and called 
+		// functions.
+		//
+		__try 
+		{ 
+			return std::forward<Function>(function)();
+		} 
+		FAIL_FAST_FILTER()
+	}
 }
 
+#define FAIL_FAST_ON_THROW(Function) \
+	COMMON_NAMESPACE::FailFastOnThrow(Function);
+
+#define FAIL_FAST(Code) \
+	FAIL_FAST_ON_THROW([&]{RaiseException(Code, EXCEPTION_NONCONTINUABLE, 0, nullptr);})
+
+#define FAIL_FAST_IF(Expression, Code) \
+	if (Expression) \
+	{ \
+		FAIL_FAST(Code); \
+	} else {}
 
 #endif // COMMON_SOURCE

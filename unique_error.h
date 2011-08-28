@@ -225,13 +225,19 @@ namespace UNIQUE_ERROR_NAMESPACE
 			return try_ok();
 		}
 
-		this_type& suppress()
+		const this_type& suppress() const
 		{
 			disposition = Disposition::Suppressed;
 			return *this;
 		}
 
-		void throw_if(const std::string& message)
+		this_type& suppress() 
+		{
+			disposition = Disposition::Suppressed;
+			return *this;
+		}
+
+		void throw_if(const std::string& message) const
 		{
 			if (!ok())
 			{
@@ -239,7 +245,7 @@ namespace UNIQUE_ERROR_NAMESPACE
 			}
 		}
 
-		void throw_if(const char* message = NULL)
+		void throw_if(const char* message = NULL) const
 		{
 			if (!ok())
 			{

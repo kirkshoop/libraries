@@ -42,12 +42,21 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 		return resource;
 	}
 
+	namespace detail 
+	{
+		template<typename ResourceTag, typename Resource>
+		void unique_resource_reset(Resource* resource)
+		{
+			unique_resource_reset(*resource, ResourceTag());
+		}
+	}
+
 	template<typename ResourceTag>
 	void unique_resource<ResourceTag>::reset()
 	{
 		if (resource != unique_resource_invalid(tag()))
 		{
-			unique_resource_reset(resource, tag());
+			FAIL_FAST_ON_THROW([&]{detail::unique_resource_reset<tag>(std::addressof(resource));});
 			resource = unique_resource_invalid(tag());
 		}
 	}
