@@ -77,7 +77,7 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #define FAIL_FAST_FILTER() \
 	__except(COMMON_NAMESPACE::FailFastFilter(GetExceptionInformation())) \
 	{ \
-	}
+	} do {} while(0,0)
 
 namespace COMMON_NAMESPACE
 {
@@ -140,20 +140,20 @@ namespace COMMON_NAMESPACE
 		{ 
 			return std::forward<Function>(function)();
 		} 
-		FAIL_FAST_FILTER()
+		FAIL_FAST_FILTER();
 	}
 }
 
 #define FAIL_FAST_ON_THROW(Function) \
-	COMMON_NAMESPACE::FailFastOnThrow(Function);
+	COMMON_NAMESPACE::FailFastOnThrow((Function))
 
 #define FAIL_FAST(Code) \
-	FAIL_FAST_ON_THROW([&]{RaiseException(Code, EXCEPTION_NONCONTINUABLE, 0, nullptr);})
+	FAIL_FAST_ON_THROW([&]{RaiseException((Code), EXCEPTION_NONCONTINUABLE, 0, nullptr);})
 
 #define FAIL_FAST_IF(Expression, Code) \
 	if (Expression) \
 	{ \
 		FAIL_FAST(Code); \
-	} else {}
+	} else {} do {} while(0,0)
 
 #endif // COMMON_SOURCE
