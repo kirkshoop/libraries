@@ -355,6 +355,11 @@ namespace RANGE_NAMESPACE
 	auto
 	make_range_raw( Range&& r ) -> decltype(RANGE_NAMESPACE::make_range(&r[0], &r[0] + RANGE_NAMESPACE::size(r)))
 	{
+		if (r.empty())
+		{
+			decltype(RANGE_NAMESPACE::make_range(&r[0], &r[0] + RANGE_NAMESPACE::size(r))) result;
+			return result;
+		}
 		return RANGE_NAMESPACE::make_range(&r[0], &r[0] + RANGE_NAMESPACE::size(r));
 	}
 

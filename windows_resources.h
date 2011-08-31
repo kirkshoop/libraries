@@ -135,7 +135,8 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 	}
 
 	inline
-	unique_winerror LoadStringRaw(HINSTANCE instance, UINT id, const RANGE_NAMESPACE::range<WCHAR*>& space, RANGE_NAMESPACE::range<WCHAR*>* spaceUsed, size_t* spaceRequested)
+	unique_winerror 
+	LoadStringRaw(HINSTANCE instance, UINT id, const RANGE_NAMESPACE::range<WCHAR*>& space, RANGE_NAMESPACE::range<WCHAR*>* spaceUsed, size_t* spaceRequested)
 	{
 		if (spaceUsed)
 		{
@@ -166,7 +167,7 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 			}
 			else
 			{
-				*spaceRequested = static_cast<size_t>(loadResult * 1.5);
+				*spaceRequested = std::max<size_t>(3, static_cast<size_t>(space.size() * 1.5));
 
 				if (winerror.ok())
 				{
@@ -186,7 +187,8 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 	}
 
 	inline
-	std::pair<unique_winerror, std::wstring> LoadStdString(HINSTANCE instance, UINT id)
+	std::pair<unique_winerror, std::wstring> 
+	LoadStdString(HINSTANCE instance, UINT id)
 	{
 		unique_winerror winerror;
 		std::wstring result;
