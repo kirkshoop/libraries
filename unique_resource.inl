@@ -5,6 +5,35 @@
 
 namespace UNIQUE_RESOURCE_NAMESPACE
 {
+
+	template<typename ResourceTag>
+	// static 
+	typename detail::optional_make_default_result<ResourceTag>::type
+	unique_resource<ResourceTag>::make() 
+	{
+		return unique_resource_make(tag());
+	}
+
+	template<typename ResourceTag>
+	template<TPLT_TEMPLATE_ARGUMENTS(1, Param)>
+	// static 
+	auto 
+	unique_resource<ResourceTag>::make(TPLT_FUNCTION_ARGUMENTS_DECL(1, Param, , &&)) 
+		-> decltype(unique_resource_make(TPLT_FUNCTION_ARGUMENTS_CAST(1, Param, std::forward), tag()))
+	{
+		return unique_resource_make(TPLT_FUNCTION_ARGUMENTS_CAST(1, Param, std::forward), tag());
+	}
+
+	template<typename ResourceTag>
+	template<TPLT_TEMPLATE_ARGUMENTS(2, Param)>
+	// static 
+	auto 
+	unique_resource<ResourceTag>::make(TPLT_FUNCTION_ARGUMENTS_DECL(2, Param, , &&)) 
+		-> decltype(unique_resource_make(TPLT_FUNCTION_ARGUMENTS_CAST(2, Param, std::forward), tag()))
+	{
+		return unique_resource_make(TPLT_FUNCTION_ARGUMENTS_CAST(2, Param, std::forward), tag());
+	}
+
 	template<typename ResourceTag>
 	unique_resource<ResourceTag>::~unique_resource()
 	{
@@ -30,16 +59,25 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 	}
 
 	template<typename ResourceTag>
-	unique_resource<ResourceTag>& unique_resource<ResourceTag>::operator=(unique_resource other)
+	unique_resource<ResourceTag>& 
+	unique_resource<ResourceTag>::operator=(unique_resource other)
 	{
 		swap(other);
 		return *this;
 	}
 
 	template<typename ResourceTag>
-	typename unique_resource<ResourceTag>::type unique_resource<ResourceTag>::operator->() const
+	typename detail::optional_indirect_result<ResourceTag>::type
+	unique_resource<ResourceTag>::operator->() const
 	{
-		return resource;
+		return unique_resource_indirect(resource, tag());
+	}
+
+	template<typename ResourceTag>
+	typename detail::optional_at_result<ResourceTag>::type
+	unique_resource<ResourceTag>::operator[] (size_t index) const
+	{
+		return unique_resource_at(resource, index, tag());
 	}
 
 	namespace detail 

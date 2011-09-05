@@ -103,6 +103,216 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 		UNIQUE_RESOURCE_NAMESPACE::unique_resource<detail::gdi_end_paint::tag>
 	unique_gdi_end_paint;
 
+#if 1
+	namespace detail
+	{
+		namespace local
+		{
+			template<typename T>
+			struct tag {};
+
+			template<typename T>
+			T* unique_resource_invalid(tag<T>&&, typename std::enable_if<!std::is_array<T>::value, void**>::type x = 0) 
+			{
+				UNREFERENCED_PARAMETER(x);
+				return nullptr; 
+			}
+
+			template<typename T>
+			void unique_resource_reset(T* resource, tag<T>&&, typename std::enable_if<!std::is_array<T>::value, void**>::type x = 0) 
+			{ 
+				UNREFERENCED_PARAMETER(x);
+				resource->~T(); 
+				LocalFree(resource); 
+			}
+
+			template<typename T>
+			T* unique_resource_indirect(T* resource, tag<T>&&, typename std::enable_if<!std::is_array<T>::value, void**>::type x = 0) 
+			{ 
+				UNREFERENCED_PARAMETER(x);
+				return resource; 
+			}
+
+			template<typename T>
+			std::pair<unique_winerror, UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag<T>>> 
+			unique_resource_make(tag<T>&&, typename std::enable_if<!std::is_array<T>::value, void**>::type x = 0) 
+			{
+				UNREFERENCED_PARAMETER(x);
+				typedef
+					UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag<T>>
+				Unique;
+				T* resource = nullptr;
+				ON_UNWIND(unwindResource, [&] { if (resource) { LocalFree(resource); } });
+				resource = reinterpret_cast<T*>(LocalAlloc(LMEM_FIXED, sizeof(T)));
+				auto winerror = make_winerror_if(!resource);
+				if (!winerror)
+				{
+					return std::make_pair(std::move(winerror), Unique());
+				}
+				new (resource) T();
+				Unique unique;
+				unique.reset(resource);
+				unwindResource.dismiss();
+				return std::make_pair(std::move(winerror), std::move(unique));
+			}
+
+			template<TPLT_TEMPLATE_ARGUMENTS(1, Param), typename T>
+			std::pair<unique_winerror, UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag<T>>> 
+			unique_resource_make(TPLT_FUNCTION_ARGUMENTS_DECL(1, Param, , &&), tag<T>&&, typename std::enable_if<!std::is_array<T>::value, void**>::type x = 0) 
+			{
+				UNREFERENCED_PARAMETER(x);
+				typedef
+					UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag<T>>
+				Unique;
+				T* resource = nullptr;
+				ON_UNWIND(unwindResource, [&] { if (resource) { LocalFree(resource); } });
+				resource = reinterpret_cast<T*>(LocalAlloc(LMEM_FIXED, sizeof(T)));
+				auto winerror = make_winerror_if(!resource);
+				if (!winerror)
+				{
+					return std::make_pair(std::move(winerror), Unique());
+				}
+				new (resource) T(TPLT_FUNCTION_ARGUMENTS_CAST(1, Param, std::forward));
+				Unique unique;
+				unique.reset(resource);
+				unwindResource.dismiss();
+				return std::make_pair(std::move(winerror), std::move(unique));
+			}
+
+			// support for arrays
+			//
+
+			template<typename T>
+			RANGE_NAMESPACE::range<T*> unique_resource_invalid(tag<T[]>&&) { return RANGE_NAMESPACE::range<T*>(); }
+
+			template<typename T>
+			void destruct_workaround(T* t)
+			{
+				t->~T();
+			}
+
+			template<typename T>
+			void unique_resource_reset(RANGE_NAMESPACE::range<T*> resource, tag<T[]>&&) 
+			{ 
+				std::for_each(
+					resource.begin(),
+					resource.end(),
+					[&] (T& t)
+					{
+						destruct_workaround(&t); 
+					}
+				);
+				LocalFree(resource.begin()); 
+			}
+
+			template<typename T>
+			T& unique_resource_at(RANGE_NAMESPACE::range<T*> resource, size_t index, tag<T[]>&&) 
+			{ 
+				return resource[index]; 
+			}
+
+			//template<typename T>
+			//T& unique_resource_at(RANGE_NAMESPACE::range<T*> resource, size_t index, tag<T[]>&&) { return resource[index]; }
+
+			template<typename T>
+			std::pair<unique_winerror, UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag<T[]>>> 
+			unique_resource_make(size_t count, tag<T[]>&&) 
+			{
+				typedef
+					UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag<T[]>>
+				Unique;
+				T* resource = nullptr;
+				size_t constructed = 0;
+				ON_UNWIND(unwindResource, 
+					[&] 
+					{ 
+						if (resource) 
+						{ 
+							auto resourceRange = RANGE_NAMESPACE::make_range(resource, resource + constructed);
+							unique_resource_reset(resourceRange, tag<T[]>());
+							constructed = 0;
+							resource = nullptr;
+						} 
+					}
+				);
+				resource = reinterpret_cast<T*>(LocalAlloc(LMEM_FIXED, count * sizeof(T)));
+				auto winerror = make_winerror_if(!resource);
+				if (!winerror)
+				{
+					return std::make_pair(std::move(winerror), Unique());
+				}
+				auto resourceRange = RANGE_NAMESPACE::make_range(resource, resource + count);
+				std::for_each(
+					resourceRange.begin(),
+					resourceRange.end(),
+					[&] (T& t)
+					{
+						new (&t) T();
+						++constructed;
+					}
+				);
+				Unique unique;
+				unique.reset(resourceRange);
+				unwindResource.dismiss();
+				return std::make_pair(std::move(winerror), std::move(unique));
+			}
+
+			template<TPLT_TEMPLATE_ARGUMENTS(1, Param), typename T>
+			std::pair<unique_winerror, UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag<T[]>>> 
+			unique_resource_make(size_t count, TPLT_FUNCTION_ARGUMENTS_DECL(1, Param, , &&), tag<T[]>&&) 
+			{
+				typedef
+					UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag<T[]>>
+				Unique;
+				T* resource = nullptr;
+				size_t constructed = 0;
+				ON_UNWIND(unwindResource, 
+					[&] 
+					{ 
+						if (resource) 
+						{ 
+							auto resourceRange = RANGE_NAMESPACE::make_range(resource, resource + constructed);
+							unique_resource_reset(resourceRange, tag<T[]>());
+							constructed = 0;
+							resource = nullptr;
+						} 
+					}
+				);
+				resource = reinterpret_cast<T*>(LocalAlloc(LMEM_FIXED, count * sizeof(T)));
+				auto winerror = make_winerror_if(!resource);
+				if (!winerror)
+				{
+					return std::make_pair(std::move(winerror), Unique());
+				}
+				auto resourceRange = RANGE_NAMESPACE::make_range(resource, resource + count);
+				std::for_each(
+					resourceRange.begin(),
+					resourceRange.end(),
+					[&] (T& t)
+					{
+						new (&t) T(TPLT_FUNCTION_ARGUMENTS_CAST(1, Param, std::forward));
+						++constructed;
+					}
+				);
+				Unique unique;
+				unique.reset(resourceRange);
+				unwindResource.dismiss();
+				return std::make_pair(std::move(winerror), std::move(unique));
+			}
+		}
+	}
+	template<typename T>
+	struct unique_local_factory
+	{
+		typedef 
+			UNIQUE_RESOURCE_NAMESPACE::unique_resource<detail::local::tag<T>>
+		type;
+	private:
+		~unique_local_factory();
+		unique_local_factory();
+	};
+#endif
+
 	namespace detail
 	{
 		namespace com_interface
@@ -115,6 +325,9 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 
 			template<typename Interface>
 			void unique_resource_reset(Interface* resource, tag<Interface>&&) { resource->Release(); }
+
+			template<typename Interface>
+			Interface* unique_resource_indirect(Interface* resource, tag<Interface>&&) { return resource; }
 		}
 	}
 	template<typename Interface>

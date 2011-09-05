@@ -166,7 +166,7 @@ namespace RANGE_NAMESPACE
 		{
 			beginIterator = RANGE_NAMESPACE::begin(r);
 			endIterator = RANGE_NAMESPACE::end(r);
-			return *this
+			return *this;
 		}
         
     public: // forward range functions
@@ -355,12 +355,28 @@ namespace RANGE_NAMESPACE
 	auto
 	make_range_raw( Range&& r ) -> decltype(RANGE_NAMESPACE::make_range(&r[0], &r[0] + RANGE_NAMESPACE::size(r)))
 	{
-		if (r.empty())
+		if (RANGE_NAMESPACE::size(r) == 0)
 		{
 			decltype(RANGE_NAMESPACE::make_range(&r[0], &r[0] + RANGE_NAMESPACE::size(r))) result;
 			return result;
 		}
 		return RANGE_NAMESPACE::make_range(&r[0], &r[0] + RANGE_NAMESPACE::size(r));
+	}
+
+	template< class Range >
+	auto
+	make_range_raw( Range&& r,	typename range_difference<Range>::type advance_begin,
+								typename range_difference<Range>::type advance_end ) 
+		-> decltype(RANGE_NAMESPACE::make_range(&r[0], &r[0] + RANGE_NAMESPACE::size(r)))
+	{
+		decltype(RANGE_NAMESPACE::make_range(&r[0], &r[0] + RANGE_NAMESPACE::size(r))) result;
+		if (RANGE_NAMESPACE::size(r) != 0)
+		{
+			result = RANGE_NAMESPACE::make_range(&r[0], &r[0] + RANGE_NAMESPACE::size(r));
+		}
+		tmp.advance_begin(N); 
+		tmp.advance_end(M); 
+		return result;
 	}
 
 	template< class Range >
