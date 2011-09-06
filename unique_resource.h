@@ -149,8 +149,14 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 		typename detail::optional_indirect_result<tag>::type
 		operator->() const;
 
+		typename detail::optional_indirect_result<tag>::type
+		operator->();
+
 		typename detail::optional_at_result<tag>::type
 		operator[] (size_t index) const;
+
+		typename detail::optional_at_result<tag>::type
+		operator[] (size_t index);
 
 		void reset();
 		void reset(type resource);

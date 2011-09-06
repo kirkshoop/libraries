@@ -74,8 +74,22 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 	}
 
 	template<typename ResourceTag>
+	typename detail::optional_indirect_result<ResourceTag>::type
+	unique_resource<ResourceTag>::operator->()
+	{
+		return unique_resource_indirect(resource, tag());
+	}
+
+	template<typename ResourceTag>
 	typename detail::optional_at_result<ResourceTag>::type
 	unique_resource<ResourceTag>::operator[] (size_t index) const
+	{
+		return unique_resource_at(resource, index, tag());
+	}
+
+	template<typename ResourceTag>
+	typename detail::optional_at_result<ResourceTag>::type
+	unique_resource<ResourceTag>::operator[] (size_t index)
 	{
 		return unique_resource_at(resource, index, tag());
 	}
@@ -88,7 +102,6 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 			unique_resource_reset(*resource, ResourceTag());
 		}
 	}
-
 
 	template<typename ResourceTag>
 	void unique_resource<ResourceTag>::reset()
