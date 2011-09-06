@@ -103,7 +103,8 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 		UNIQUE_RESOURCE_NAMESPACE::unique_resource<detail::gdi_end_paint::tag>
 	unique_gdi_end_paint;
 
-#if 1
+#pragma warning(push)
+#pragma warning(disable:4345) //  behavior change: an object of POD type constructed with an initializer of the form () will be default-initialized
 	namespace detail
 	{
 		namespace local
@@ -188,6 +189,7 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 			template<typename T>
 			void destruct_workaround(T* t)
 			{
+				UNREFERENCED_PARAMETER(t);
 				t->~T();
 			}
 
@@ -203,6 +205,12 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 					}
 				);
 				LocalFree(resource.begin()); 
+			}
+
+			template<typename T>
+			bool unique_resource_empty(RANGE_NAMESPACE::range<T*> resource, tag<T[]>&&) 
+			{ 
+				return resource.empty();
 			}
 
 			template<typename T>
@@ -311,7 +319,7 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 		~unique_local_factory();
 		unique_local_factory();
 	};
-#endif
+#pragma warning(pop)
 
 	namespace detail
 	{

@@ -89,10 +89,11 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 		}
 	}
 
+
 	template<typename ResourceTag>
 	void unique_resource<ResourceTag>::reset()
 	{
-		if (resource != unique_resource_invalid(tag()))
+		if (!empty())
 		{
 			FAIL_FAST_ON_THROW([&]{detail::unique_resource_reset<tag>(std::addressof(resource));});
 			resource = unique_resource_invalid(tag());
@@ -127,10 +128,28 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 		return resource;
 	}
 
+	namespace detail
+	{
+		template<typename ResourceTag, typename ResourceType>
+		auto 
+		optional_unique_resource_empty(ResourceType&& resource, int)
+			-> decltype(unique_resource_empty(std::forward<ResourceType>(resource), ResourceTag()))
+		{
+			return unique_resource_empty(std::forward<ResourceType>(resource), ResourceTag());
+		}
+
+		template<typename ResourceTag, typename ResourceType>
+		bool 
+		optional_unique_resource_empty(ResourceType&& resource, ...)
+		{
+			return resource == unique_resource_invalid(ResourceTag());
+		}
+	}
+
 	template<typename ResourceTag>
 	bool unique_resource<ResourceTag>::empty() const
 	{
-		return resource == unique_resource_invalid(tag());
+		return detail::optional_unique_resource_empty<tag>(resource, 0);
 	}
 
 	template<typename ResourceTag>

@@ -142,6 +142,12 @@ namespace COMMON_NAMESPACE
 		} 
 		FAIL_FAST_FILTER();
 	}
+
+	template<typename T>
+	void inspect(T&& t)
+	{
+		static_assert(false, "inspector");
+	}
 }
 
 #define FAIL_FAST_ON_THROW(Function) \
