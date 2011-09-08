@@ -15,7 +15,7 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 	}
 
 	template<typename ResourceTag>
-	template<TPLT_TEMPLATE_ARGUMENTS(1, Param)>
+	template<TPLT_TEMPLATE_ARGUMENTS_DECL(1, Param)>
 	// static 
 	auto 
 	unique_resource<ResourceTag>::make(TPLT_FUNCTION_ARGUMENTS_DECL(1, Param, , &&)) 
@@ -25,7 +25,7 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 	}
 
 	template<typename ResourceTag>
-	template<TPLT_TEMPLATE_ARGUMENTS(2, Param)>
+	template<TPLT_TEMPLATE_ARGUMENTS_DECL(2, Param)>
 	// static 
 	auto 
 	unique_resource<ResourceTag>::make(TPLT_FUNCTION_ARGUMENTS_DECL(2, Param, , &&)) 

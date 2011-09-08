@@ -157,7 +157,7 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 				return std::make_pair(std::move(winerror), std::move(unique));
 			}
 
-			template<TPLT_TEMPLATE_ARGUMENTS(1, Param), typename T>
+			template<TPLT_TEMPLATE_ARGUMENTS_DECL(1, Param), typename T>
 			std::pair<unique_winerror, UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag<T>>> 
 			unique_resource_make(TPLT_FUNCTION_ARGUMENTS_DECL(1, Param, , &&), tag<T>&&, typename std::enable_if<!std::is_array<T>::value, void**>::type x = 0) 
 			{
@@ -280,7 +280,7 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 				return std::make_pair(std::move(winerror), std::move(unique));
 			}
 
-			template<TPLT_TEMPLATE_ARGUMENTS(1, Param), typename T>
+			template<TPLT_TEMPLATE_ARGUMENTS_DECL(1, Param), typename T>
 			std::pair<unique_winerror, UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag<T[]>>> 
 			unique_resource_make(size_t count, TPLT_FUNCTION_ARGUMENTS_DECL(1, Param, , &&), tag<T[]>&&) 
 			{

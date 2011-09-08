@@ -126,11 +126,11 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 		typename detail::optional_make_default_result<tag>::type
 		make();
 
-		template<TPLT_TEMPLATE_ARGUMENTS(1, Param)>
+		template<TPLT_TEMPLATE_ARGUMENTS_DECL(1, Param)>
 		static auto make(TPLT_FUNCTION_ARGUMENTS_DECL(1, Param, , &&)) 
 			-> decltype(unique_resource_make(TPLT_FUNCTION_ARGUMENTS_CAST(1, Param, std::forward), tag()));
 
-		template<TPLT_TEMPLATE_ARGUMENTS(2, Param)>
+		template<TPLT_TEMPLATE_ARGUMENTS_DECL(2, Param)>
 		static auto make(TPLT_FUNCTION_ARGUMENTS_DECL(2, Param, , &&)) 
 			-> decltype(unique_resource_make(TPLT_FUNCTION_ARGUMENTS_CAST(2, Param, std::forward), tag()));
 

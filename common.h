@@ -8,17 +8,64 @@
 
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
-#define TPLT_TEMPLATE_ARGUMENTS( Count, Prefix ) TPLT_TEMPLATE_ARGUMENTS_ ## Count (Prefix)
-#define TPLT_TEMPLATE_ARGUMENTS_1( Prefix )  typename Prefix ## _T1 
-#define TPLT_TEMPLATE_ARGUMENTS_2( Prefix )  TPLT_TEMPLATE_ARGUMENTS_1( Prefix ), typename Prefix ## _T2 
-#define TPLT_TEMPLATE_ARGUMENTS_3( Prefix )  TPLT_TEMPLATE_ARGUMENTS_2( Prefix ), typename Prefix ## _T3 
-#define TPLT_TEMPLATE_ARGUMENTS_4( Prefix )  TPLT_TEMPLATE_ARGUMENTS_3( Prefix ), typename Prefix ## _T4 
-#define TPLT_TEMPLATE_ARGUMENTS_5( Prefix )  TPLT_TEMPLATE_ARGUMENTS_4( Prefix ), typename Prefix ## _T5 
-#define TPLT_TEMPLATE_ARGUMENTS_6( Prefix )  TPLT_TEMPLATE_ARGUMENTS_5( Prefix ), typename Prefix ## _T6 
-#define TPLT_TEMPLATE_ARGUMENTS_7( Prefix )  TPLT_TEMPLATE_ARGUMENTS_6( Prefix ), typename Prefix ## _T7 
-#define TPLT_TEMPLATE_ARGUMENTS_8( Prefix )  TPLT_TEMPLATE_ARGUMENTS_7( Prefix ), typename Prefix ## _T8 
-#define TPLT_TEMPLATE_ARGUMENTS_9( Prefix )  TPLT_TEMPLATE_ARGUMENTS_8( Prefix ), typename Prefix ## _T9 
-#define TPLT_TEMPLATE_ARGUMENTS_10( Prefix ) TPLT_TEMPLATE_ARGUMENTS_9( Prefix ), typename Prefix ## _T10
+#define TPLT_ARGUMENTS_CALL( Count, Argument) TPLT_ARGUMENTS_CALL_ ## Count (Argument)
+#define TPLT_ARGUMENTS_CALL_1( Argument )  Argument 
+#define TPLT_ARGUMENTS_CALL_2( Argument )  TPLT_ARGUMENTS_CALL_1( Argument ), Argument
+#define TPLT_ARGUMENTS_CALL_3( Argument )  TPLT_ARGUMENTS_CALL_2( Argument ), Argument
+#define TPLT_ARGUMENTS_CALL_4( Argument )  TPLT_ARGUMENTS_CALL_3( Argument ), Argument
+#define TPLT_ARGUMENTS_CALL_5( Argument )  TPLT_ARGUMENTS_CALL_4( Argument ), Argument
+#define TPLT_ARGUMENTS_CALL_6( Argument )  TPLT_ARGUMENTS_CALL_5( Argument ), Argument
+#define TPLT_ARGUMENTS_CALL_7( Argument )  TPLT_ARGUMENTS_CALL_6( Argument ), Argument
+#define TPLT_ARGUMENTS_CALL_8( Argument )  TPLT_ARGUMENTS_CALL_7( Argument ), Argument
+#define TPLT_ARGUMENTS_CALL_9( Argument )  TPLT_ARGUMENTS_CALL_8( Argument ), Argument
+#define TPLT_ARGUMENTS_CALL_10( Argument ) TPLT_ARGUMENTS_CALL_9( Argument ), Argument
+
+#define TPLT_TEMPLATE_ARGUMENTS_DECL( Count, Prefix ) TPLT_TEMPLATE_ARGUMENTS_DECL_ ## Count (Prefix)
+#define TPLT_TEMPLATE_ARGUMENTS_DECL_1( Prefix )  typename Prefix ## _T1 
+#define TPLT_TEMPLATE_ARGUMENTS_DECL_2( Prefix )  TPLT_TEMPLATE_ARGUMENTS_DECL_1( Prefix ), typename Prefix ## _T2 
+#define TPLT_TEMPLATE_ARGUMENTS_DECL_3( Prefix )  TPLT_TEMPLATE_ARGUMENTS_DECL_2( Prefix ), typename Prefix ## _T3 
+#define TPLT_TEMPLATE_ARGUMENTS_DECL_4( Prefix )  TPLT_TEMPLATE_ARGUMENTS_DECL_3( Prefix ), typename Prefix ## _T4 
+#define TPLT_TEMPLATE_ARGUMENTS_DECL_5( Prefix )  TPLT_TEMPLATE_ARGUMENTS_DECL_4( Prefix ), typename Prefix ## _T5 
+#define TPLT_TEMPLATE_ARGUMENTS_DECL_6( Prefix )  TPLT_TEMPLATE_ARGUMENTS_DECL_5( Prefix ), typename Prefix ## _T6 
+#define TPLT_TEMPLATE_ARGUMENTS_DECL_7( Prefix )  TPLT_TEMPLATE_ARGUMENTS_DECL_6( Prefix ), typename Prefix ## _T7 
+#define TPLT_TEMPLATE_ARGUMENTS_DECL_8( Prefix )  TPLT_TEMPLATE_ARGUMENTS_DECL_7( Prefix ), typename Prefix ## _T8 
+#define TPLT_TEMPLATE_ARGUMENTS_DECL_9( Prefix )  TPLT_TEMPLATE_ARGUMENTS_DECL_8( Prefix ), typename Prefix ## _T9 
+#define TPLT_TEMPLATE_ARGUMENTS_DECL_10( Prefix ) TPLT_TEMPLATE_ARGUMENTS_DECL_9( Prefix ), typename Prefix ## _T10
+
+#define TPLT_TEMPLATE_ARGUMENTS_DEFAULT_DECL( Count, Prefix, Default ) TPLT_TEMPLATE_ARGUMENTS_DEFAULT_DECL_ ## Count (Prefix, Default)
+#define TPLT_TEMPLATE_ARGUMENTS_DEFAULT_DECL_1( Prefix, Default )  typename Prefix ## _T1 = Default
+#define TPLT_TEMPLATE_ARGUMENTS_DEFAULT_DECL_2( Prefix, Default )  TPLT_TEMPLATE_ARGUMENTS_DEFAULT_DECL_1( Prefix, Default ), typename Prefix ## _T2  = Default
+#define TPLT_TEMPLATE_ARGUMENTS_DEFAULT_DECL_3( Prefix, Default )  TPLT_TEMPLATE_ARGUMENTS_DEFAULT_DECL_2( Prefix, Default ), typename Prefix ## _T3  = Default
+#define TPLT_TEMPLATE_ARGUMENTS_DEFAULT_DECL_4( Prefix, Default )  TPLT_TEMPLATE_ARGUMENTS_DEFAULT_DECL_3( Prefix, Default ), typename Prefix ## _T4  = Default
+#define TPLT_TEMPLATE_ARGUMENTS_DEFAULT_DECL_5( Prefix, Default )  TPLT_TEMPLATE_ARGUMENTS_DEFAULT_DECL_4( Prefix, Default ), typename Prefix ## _T5  = Default
+#define TPLT_TEMPLATE_ARGUMENTS_DEFAULT_DECL_6( Prefix, Default )  TPLT_TEMPLATE_ARGUMENTS_DEFAULT_DECL_5( Prefix, Default ), typename Prefix ## _T6  = Default
+#define TPLT_TEMPLATE_ARGUMENTS_DEFAULT_DECL_7( Prefix, Default )  TPLT_TEMPLATE_ARGUMENTS_DEFAULT_DECL_6( Prefix, Default ), typename Prefix ## _T7  = Default
+#define TPLT_TEMPLATE_ARGUMENTS_DEFAULT_DECL_8( Prefix, Default )  TPLT_TEMPLATE_ARGUMENTS_DEFAULT_DECL_7( Prefix, Default ), typename Prefix ## _T8  = Default
+#define TPLT_TEMPLATE_ARGUMENTS_DEFAULT_DECL_9( Prefix, Default )  TPLT_TEMPLATE_ARGUMENTS_DEFAULT_DECL_8( Prefix, Default ), typename Prefix ## _T9  = Default
+#define TPLT_TEMPLATE_ARGUMENTS_DEFAULT_DECL_10( Prefix, Default ) TPLT_TEMPLATE_ARGUMENTS_DEFAULT_DECL_9( Prefix, Default ), typename Prefix ## _T10 = Default
+
+#define TPLT_TEMPLATE_ARGUMENTS_CALL( Count, Prefix) TPLT_TEMPLATE_ARGUMENTS_CALL_ ## Count (Prefix)
+#define TPLT_TEMPLATE_ARGUMENTS_CALL_1( Prefix )  Prefix ## _T1 
+#define TPLT_TEMPLATE_ARGUMENTS_CALL_2( Prefix )  TPLT_TEMPLATE_ARGUMENTS_CALL_1( Prefix ), Prefix ## _T2 
+#define TPLT_TEMPLATE_ARGUMENTS_CALL_3( Prefix )  TPLT_TEMPLATE_ARGUMENTS_CALL_2( Prefix ), Prefix ## _T3 
+#define TPLT_TEMPLATE_ARGUMENTS_CALL_4( Prefix )  TPLT_TEMPLATE_ARGUMENTS_CALL_3( Prefix ), Prefix ## _T4 
+#define TPLT_TEMPLATE_ARGUMENTS_CALL_5( Prefix )  TPLT_TEMPLATE_ARGUMENTS_CALL_4( Prefix ), Prefix ## _T5 
+#define TPLT_TEMPLATE_ARGUMENTS_CALL_6( Prefix )  TPLT_TEMPLATE_ARGUMENTS_CALL_5( Prefix ), Prefix ## _T6 
+#define TPLT_TEMPLATE_ARGUMENTS_CALL_7( Prefix )  TPLT_TEMPLATE_ARGUMENTS_CALL_6( Prefix ), Prefix ## _T7 
+#define TPLT_TEMPLATE_ARGUMENTS_CALL_8( Prefix )  TPLT_TEMPLATE_ARGUMENTS_CALL_7( Prefix ), Prefix ## _T8 
+#define TPLT_TEMPLATE_ARGUMENTS_CALL_9( Prefix )  TPLT_TEMPLATE_ARGUMENTS_CALL_8( Prefix ), Prefix ## _T9 
+#define TPLT_TEMPLATE_ARGUMENTS_CALL_10( Prefix ) TPLT_TEMPLATE_ARGUMENTS_CALL_9( Prefix ), Prefix ## _T10 
+
+#define TPLT_TEMPLATE_ARGUMENTS_CALL_TAIL( Count, Prefix) TPLT_TEMPLATE_ARGUMENTS_CALL_TAIL_ ## Count (Prefix)
+#define TPLT_TEMPLATE_ARGUMENTS_CALL_TAIL_1( Prefix )  Prefix ## _T2 
+#define TPLT_TEMPLATE_ARGUMENTS_CALL_TAIL_2( Prefix )  TPLT_TEMPLATE_ARGUMENTS_CALL_TAIL_1( Prefix ), Prefix ## _T3 
+#define TPLT_TEMPLATE_ARGUMENTS_CALL_TAIL_3( Prefix )  TPLT_TEMPLATE_ARGUMENTS_CALL_TAIL_2( Prefix ), Prefix ## _T4 
+#define TPLT_TEMPLATE_ARGUMENTS_CALL_TAIL_4( Prefix )  TPLT_TEMPLATE_ARGUMENTS_CALL_TAIL_3( Prefix ), Prefix ## _T5 
+#define TPLT_TEMPLATE_ARGUMENTS_CALL_TAIL_5( Prefix )  TPLT_TEMPLATE_ARGUMENTS_CALL_TAIL_4( Prefix ), Prefix ## _T6 
+#define TPLT_TEMPLATE_ARGUMENTS_CALL_TAIL_6( Prefix )  TPLT_TEMPLATE_ARGUMENTS_CALL_TAIL_5( Prefix ), Prefix ## _T7 
+#define TPLT_TEMPLATE_ARGUMENTS_CALL_TAIL_7( Prefix )  TPLT_TEMPLATE_ARGUMENTS_CALL_TAIL_6( Prefix ), Prefix ## _T8 
+#define TPLT_TEMPLATE_ARGUMENTS_CALL_TAIL_8( Prefix )  TPLT_TEMPLATE_ARGUMENTS_CALL_TAIL_7( Prefix ), Prefix ## _T9 
+#define TPLT_TEMPLATE_ARGUMENTS_CALL_TAIL_9( Prefix )  TPLT_TEMPLATE_ARGUMENTS_CALL_TAIL_8( Prefix ), Prefix ## _T10 
 
 #define TPLT_FUNCTION_ARGUMENTS_DECL( Count, Prefix, PreType, PostType ) TPLT_FUNCTION_ARGUMENTS_DECL_ ## Count (Prefix, PreType, PostType)
 #define TPLT_FUNCTION_ARGUMENTS_DECL_1( Prefix, PreType, PostType )  PreType Prefix ## _T1 PostType Prefix ## _t1

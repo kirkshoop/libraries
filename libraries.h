@@ -5,6 +5,12 @@
 #define COMMON_NAMESPACE nscommon
 #include "common.h"
 
+#define TYPE_VECTOR_NAMESPACE nstypvec
+#include "type_vector.h"
+
+#define ONE_OF_NAMESPACE nsoneof
+#include "one_of.h"
+
 #define RANGE_NAMESPACE nsrange
 #include "range.h"
 
@@ -37,6 +43,8 @@ namespace LIBRARIES_NAMESPACE
 	using namespace UNIQUE_RESOURCE_NAMESPACE;
 	using namespace WINDOWS_RESOURCES_NAMESPACE;
 	using namespace WIN32_WINDOW_NAMESPACE;
+	using namespace TYPE_VECTOR_NAMESPACE;
+	using namespace ONE_OF_NAMESPACE;
 }
 
 #endif // LIBRARIES_SOURCE

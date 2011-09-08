@@ -78,7 +78,7 @@ namespace WIN32_WINDOW_NAMESPACE
 			: context(contextArg) \
 		{ } \
  \
-		template<TPLT_TEMPLATE_ARGUMENTS(ParamCount, Param)> \
+		template<TPLT_TEMPLATE_ARGUMENTS_DECL(ParamCount, Param)> \
 		LRESULT operator()(TPLT_FUNCTION_ARGUMENTS_DECL(ParamCount, Param, , &&)) \
 		{ \
 			if (context->message == WM_ ## CapitalMessage) \
