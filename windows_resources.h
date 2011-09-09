@@ -336,6 +336,239 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 	};
 #pragma warning(pop)
 
+#pragma warning(push)
+#pragma warning(disable:4345) //  behavior change: an object of POD type constructed with an initializer of the form () will be default-initialized
+	namespace detail
+	{
+		namespace cotask
+		{
+			template<typename T>
+			struct tag {};
+
+			template<typename T>
+			T* unique_resource_invalid(tag<T>&&, typename std::enable_if<!std::is_array<T>::value, void**>::type x = 0) 
+			{
+				UNREFERENCED_PARAMETER(x);
+				return nullptr; 
+			}
+
+			template<typename T>
+			void unique_resource_reset(T* resource, tag<T>&&, typename std::enable_if<!std::is_array<T>::value, void**>::type x = 0) 
+			{ 
+				UNREFERENCED_PARAMETER(x);
+				resource->~T(); 
+				CoTaskMemFree(resource); 
+			}
+
+			template<typename T>
+			T* unique_resource_indirect(T* resource, tag<T>&&, typename std::enable_if<!std::is_array<T>::value, void**>::type x = 0) 
+			{ 
+				UNREFERENCED_PARAMETER(x);
+				return resource; 
+			}
+
+			template<typename T>
+			std::pair<unique_winerror, UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag<T>>> 
+			unique_resource_make(tag<T>&&, typename std::enable_if<!std::is_array<T>::value, void**>::type x = 0) 
+			{
+				UNREFERENCED_PARAMETER(x);
+				typedef
+					UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag<T>>
+				Unique;
+				T* resource = nullptr;
+				ON_UNWIND(unwindResource, [&] { if (resource) { CoTaskMemFree(resource); } });
+				resource = reinterpret_cast<T*>(CoTaskMemAlloc(sizeof(T)));
+				auto winerror = make_winerror_if(!resource);
+				if (!winerror)
+				{
+					return std::make_pair(std::move(winerror), Unique());
+				}
+				new (resource) T();
+				Unique unique;
+				unique.reset(resource);
+				unwindResource.dismiss();
+				return std::make_pair(std::move(winerror), std::move(unique));
+			}
+
+			template<TPLT_TEMPLATE_ARGUMENTS_DECL(1, Param), typename T>
+			std::pair<unique_winerror, UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag<T>>> 
+			unique_resource_make(TPLT_FUNCTION_ARGUMENTS_DECL(1, Param, , &&), tag<T>&&, typename std::enable_if<!std::is_array<T>::value, void**>::type x = 0) 
+			{
+				UNREFERENCED_PARAMETER(x);
+				typedef
+					UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag<T>>
+				Unique;
+				T* resource = nullptr;
+				ON_UNWIND(unwindResource, [&] { if (resource) { CoTaskMemFree(resource); } });
+				resource = reinterpret_cast<T*>(CoTaskMemAlloc(sizeof(T)));
+				auto winerror = make_winerror_if(!resource);
+				if (!winerror)
+				{
+					return std::make_pair(std::move(winerror), Unique());
+				}
+				new (resource) T(TPLT_FUNCTION_ARGUMENTS_CAST(1, Param, std::forward));
+				Unique unique;
+				unique.reset(resource);
+				unwindResource.dismiss();
+				return std::make_pair(std::move(winerror), std::move(unique));
+			}
+
+			// support for arrays
+			//
+
+			template<typename T>
+			RANGE_NAMESPACE::range<T*> unique_resource_invalid(tag<T[]>&&) { return RANGE_NAMESPACE::range<T*>(); }
+
+			template<typename T>
+			void destruct_workaround(T* t)
+			{
+				UNREFERENCED_PARAMETER(t);
+				t->~T();
+			}
+
+			template<typename T>
+			const RANGE_NAMESPACE::range<T*>* unique_resource_indirect(const RANGE_NAMESPACE::range<T*>& resource, tag<T[]>&&) 
+			{ 
+				return &resource; 
+			}
+
+			template<typename T>
+			RANGE_NAMESPACE::range<T*>* unique_resource_indirect(RANGE_NAMESPACE::range<T*>& resource, tag<T[]>&&) 
+			{ 
+				return &resource; 
+			}
+
+			template<typename T>
+			void unique_resource_reset(RANGE_NAMESPACE::range<T*> resource, tag<T[]>&&) 
+			{ 
+				std::for_each(
+					resource.begin(),
+					resource.end(),
+					[&] (T& t)
+					{
+						destruct_workaround(&t); 
+					}
+				);
+				CoTaskMemFree(resource.begin()); 
+			}
+
+			template<typename T>
+			bool unique_resource_empty(RANGE_NAMESPACE::range<T*> resource, tag<T[]>&&) 
+			{ 
+				return resource.empty();
+			}
+
+			template<typename T>
+			T& unique_resource_at(RANGE_NAMESPACE::range<T*> resource, size_t index, tag<T[]>&&) 
+			{ 
+				return resource[index]; 
+			}
+
+			template<typename T>
+			const T& unique_resource_at(const RANGE_NAMESPACE::range<T*>& resource, size_t index, tag<T[]>&&) 
+			{ 
+				return resource[index]; 
+			}
+
+			template<typename T>
+			std::pair<unique_winerror, UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag<T[]>>> 
+			unique_resource_make(size_t count, tag<T[]>&&) 
+			{
+				typedef
+					UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag<T[]>>
+				Unique;
+				T* resource = nullptr;
+				size_t constructed = 0;
+				ON_UNWIND(unwindResource, 
+					[&] 
+					{ 
+						if (resource) 
+						{ 
+							auto resourceRange = RANGE_NAMESPACE::make_range(resource, resource + constructed);
+							unique_resource_reset(resourceRange, tag<T[]>());
+							constructed = 0;
+							resource = nullptr;
+						} 
+					}
+				);
+				resource = reinterpret_cast<T*>(CoTaskMemAlloc(count * sizeof(T)));
+				auto winerror = make_winerror_if(!resource);
+				if (!winerror)
+				{
+					return std::make_pair(std::move(winerror), Unique());
+				}
+				auto resourceRange = RANGE_NAMESPACE::make_range(resource, resource + count);
+				std::for_each(
+					resourceRange.begin(),
+					resourceRange.end(),
+					[&] (T& t)
+					{
+						new (&t) T();
+						++constructed;
+					}
+				);
+				Unique unique;
+				unique.reset(resourceRange);
+				unwindResource.dismiss();
+				return std::make_pair(std::move(winerror), std::move(unique));
+			}
+
+			template<TPLT_TEMPLATE_ARGUMENTS_DECL(1, Param), typename T>
+			std::pair<unique_winerror, UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag<T[]>>> 
+			unique_resource_make(size_t count, TPLT_FUNCTION_ARGUMENTS_DECL(1, Param, , &&), tag<T[]>&&) 
+			{
+				typedef
+					UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag<T[]>>
+				Unique;
+				T* resource = nullptr;
+				size_t constructed = 0;
+				ON_UNWIND(unwindResource, 
+					[&] 
+					{ 
+						if (resource) 
+						{ 
+							auto resourceRange = RANGE_NAMESPACE::make_range(resource, resource + constructed);
+							unique_resource_reset(resourceRange, tag<T[]>());
+							constructed = 0;
+							resource = nullptr;
+						} 
+					}
+				);
+				resource = reinterpret_cast<T*>(CoTaskMemAlloc(count * sizeof(T)));
+				auto winerror = make_winerror_if(!resource);
+				if (!winerror)
+				{
+					return std::make_pair(std::move(winerror), Unique());
+				}
+				auto resourceRange = RANGE_NAMESPACE::make_range(resource, resource + count);
+				std::for_each(
+					resourceRange.begin(),
+					resourceRange.end(),
+					[&] (T& t)
+					{
+						new (&t) T(TPLT_FUNCTION_ARGUMENTS_CAST(1, Param, std::forward));
+						++constructed;
+					}
+				);
+				Unique unique;
+				unique.reset(resourceRange);
+				unwindResource.dismiss();
+				return std::make_pair(std::move(winerror), std::move(unique));
+			}
+		}
+	}
+	template<typename T>
+	struct unique_cotask_factory
+	{
+		typedef 
+			UNIQUE_RESOURCE_NAMESPACE::unique_resource<detail::cotask::tag<T>>
+		type;
+	private:
+		~unique_cotask_factory();
+		unique_cotask_factory();
+	};
+#pragma warning(pop)
+
 	namespace detail
 	{
 		namespace com_interface
@@ -423,24 +656,53 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 	}
 
 	inline
-	std::pair<unique_winerror, std::wstring> 
-	LoadStdString(HINSTANCE instance, UINT id)
+	std::wstring 
+	LoadStdString(HINSTANCE instance, UINT id, size_t sizeLimit = 2048, size_t initialSize = 80)
 	{
 		unique_winerror winerror;
 		std::wstring result;
 		RANGE_NAMESPACE::range<WCHAR*> spaceUsed;
-		size_t spaceRequested = 80;
+		size_t spaceRequested = initialSize;
 
-		while(spaceRequested < 2048)
+		while(spaceRequested < sizeLimit)
 		{
 			result.resize(spaceRequested);
 			winerror = LoadStringRaw(instance, id, RANGE_NAMESPACE::make_range_raw(result), &spaceUsed, &spaceRequested);
-			if (winerror == winerror_cast(ERROR_MORE_DATA))
+			if (winerror != winerror_cast(ERROR_MORE_DATA))
 			{
-				winerror.suppress();
-				continue;
+				winerror.throw_if();
+				break;
 			}
-			break;
+			winerror.suppress();
+			continue;
+		}
+
+		return std::move(result);
+	}
+
+	template<typename UniqueResource> 
+	std::pair<unique_winerror, UniqueResource>
+	LoadStdString(HINSTANCE instance, UINT id, size_t sizeLimit = 2048, size_t initialSize = 80) 
+	{
+		unique_winerror winerror;
+		UniqueResource result;
+		RANGE_NAMESPACE::range<WCHAR*> spaceUsed;
+		size_t spaceRequested = initialSize;
+
+		while(spaceRequested < sizeLimit)
+		{
+			std::tie(winerror, result) = UniqueResource::make(spaceRequested);
+			if (!winerror)
+			{
+				break;
+			}
+			winerror = LoadStringRaw(instance, id, result.get(), &spaceUsed, &spaceRequested);
+			if (winerror != winerror_cast(ERROR_MORE_DATA))
+			{
+				break;
+			}
+			winerror.suppress();
+			continue;
 		}
 
 		return std::make_pair(std::move(winerror), std::move(result));

@@ -90,6 +90,10 @@ namespace UNIQUE_ERROR_NAMESPACE
 			decltype(unique_error_default(tag()))
 		type;
 
+		typedef
+			specific_exception<tag>
+		exception;
+
 		class static_error
 		{
 		private:
@@ -241,7 +245,7 @@ namespace UNIQUE_ERROR_NAMESPACE
 		{
 			if (!ok())
 			{
-				throw specific_exception<tag>(value, message);
+				throw exception(value, message);
 			}
 		}
 
@@ -249,7 +253,7 @@ namespace UNIQUE_ERROR_NAMESPACE
 		{
 			if (!ok())
 			{
-				throw specific_exception<tag>(value, message);
+				throw exception(value, message);
 			}
 		}
 
