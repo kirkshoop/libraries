@@ -25,8 +25,14 @@
 #define UNIQUE_RESOURCE_NAMESPACE nsunqrsrc
 #include "unique_resource.h"
 
+#define INTERFACE_SET_NAMESPACE nsintset
+#include "interface_set.h"
+
 #define WINDOWS_RESOURCES_NAMESPACE nswinrsrc
 #include "windows_resources.h"
+
+#define COM_NAMESPACE nscom
+#include "com_unknown.h"
 
 #define WIN32_WINDOW_NAMESPACE nswin32window
 #include "win32_window.h"
@@ -43,8 +49,10 @@ namespace LIBRARIES_NAMESPACE
 	using namespace UNIQUE_RESOURCE_NAMESPACE;
 	using namespace WINDOWS_RESOURCES_NAMESPACE;
 	using namespace WIN32_WINDOW_NAMESPACE;
-	using namespace TYPE_VECTOR_NAMESPACE;
-	using namespace ONE_OF_NAMESPACE;
+	namespace tv=TYPE_VECTOR_NAMESPACE;
+	namespace of=ONE_OF_NAMESPACE;
+	namespace iset=INTERFACE_SET_NAMESPACE;
+	namespace com=COM_NAMESPACE;
 }
 
 #endif // LIBRARIES_SOURCE

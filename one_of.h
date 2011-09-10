@@ -7,8 +7,8 @@
 
 namespace ONE_OF_NAMESPACE
 {
-	using namespace COMMON_NAMESPACE;
-	using namespace TYPE_VECTOR_NAMESPACE;
+	namespace cmn=COMMON_NAMESPACE;
+	namespace tv=TYPE_VECTOR_NAMESPACE;
 
 	namespace detail
 	{
@@ -36,14 +36,14 @@ namespace ONE_OF_NAMESPACE
 			};
 
 			template<size_t At>
-			static typename at<Begin, End, At>::type* get_at(types current, typename std::enable_if<At == index, void**>::type x = 0)
+			static typename tv::at<Begin, End, At>::type* get_at(types current, typename std::enable_if<At == index, void**>::type x = 0)
 			{
 				UNREFERENCED_PARAMETER(x);
 				return current.pointer;
 			}
 
 			template<size_t At>
-			static typename at<Begin, End, At>::type* get_at(types current, ...)
+			static typename tv::at<Begin, End, At>::type* get_at(types current, ...)
 			{
 				return base::get_at<At>(current.next);
 			}
@@ -78,17 +78,17 @@ namespace ONE_OF_NAMESPACE
 
 			template <typename Previous, typename Current>
 			struct largest
-				: public type_trait<typename std::conditional<sizeof(Previous) < sizeof(Current), Current, Previous>::type>
+				: public cmn::type_trait<typename std::conditional<sizeof(Previous) < sizeof(Current), Current, Previous>::type>
 			{
 			};
 			template <typename Previous, typename Current>
 			struct maxAligned
-				: public type_trait<typename std::conditional<((Previous::value) < (std::alignment_of<Current>::value)), std::alignment_of<Current>, Previous>::type>
+				: public cmn::type_trait<typename std::conditional<((Previous::value) < (std::alignment_of<Current>::value)), std::alignment_of<Current>, Previous>::type>
 			{
 			};
 			static const size_t size = Index;
-			static const size_t maxSize = sizeof(typename accumulate<Begin, end_forward_iterator, BYTE, largest>::type);
-			static const size_t maxAlign = accumulate<Begin, end_forward_iterator, std::alignment_of<BYTE>, maxAligned>::type::value;
+			static const size_t maxSize = sizeof(typename tv::accumulate<Begin, Cursor, BYTE, largest>::type);
+			static const size_t maxAlign = tv::accumulate<Begin, Cursor, std::alignment_of<BYTE>, maxAligned>::type::value;
 			typedef
 				typename std::aligned_storage<maxSize, maxAlign>::type 
 			storage;
@@ -99,7 +99,7 @@ namespace ONE_OF_NAMESPACE
 			};
 
 			template<size_t At>
-			static typename at<Begin, Cursor, At>::type* get_at(types )
+			static typename tv::at<Begin, Cursor, At>::type* get_at(types )
 			{
 				return nullptr;
 			}
@@ -306,9 +306,9 @@ namespace ONE_OF_NAMESPACE
 			return *this;
 		}
 
-		operator typename unspecified_bool<this_type>::type() const
+		operator typename cmn::unspecified_bool<this_type>::type() const
 		{
-			return unspecified_bool<this_type>::get(!empty());
+			return cmn::unspecified_bool<this_type>::get(!empty());
 		}
 
 		bool empty()
@@ -338,7 +338,7 @@ namespace ONE_OF_NAMESPACE
 		{
 			reset();
 			typedef
-				typename at<typename Vector::begin, typename Vector::end, At>::type
+				typename tv::at<typename Vector::begin, typename Vector::end, At>::type
 			Value;
 			new (&storage) Value(std::forward<T>(value));
 			traits::set_at<At>(types, &storage);
@@ -346,14 +346,14 @@ namespace ONE_OF_NAMESPACE
 		}
 
 		template<size_t At>
-		const typename at<typename Vector::begin, typename Vector::end, At>::type*
+		const typename tv::at<typename Vector::begin, typename Vector::end, At>::type*
 		get() const
 		{
 			return traits::get_at<At>(types);
 		}
 
 		template<size_t At>
-		const typename at<typename Vector::begin, typename Vector::end, At>::type*
+		const typename tv::at<typename Vector::begin, typename Vector::end, At>::type*
 		get()
 		{
 			return traits::get_at<At>(types);

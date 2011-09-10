@@ -49,7 +49,7 @@ namespace UNIQUE_ERROR_NAMESPACE
 		{
 		}
 
-		type get()
+		type get() const 
 		{
 			return value;
 		}

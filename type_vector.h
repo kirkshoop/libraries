@@ -7,7 +7,7 @@
 
 namespace TYPE_VECTOR_NAMESPACE
 {
-	using namespace COMMON_NAMESPACE;
+	namespace cmn=COMMON_NAMESPACE;
 
 	struct invalid {};
 
@@ -80,47 +80,47 @@ namespace TYPE_VECTOR_NAMESPACE
 	};
 
 	template<TPLT_TEMPLATE_ARGUMENTS_DEFAULT_DECL(10, Type, invalid)> struct factory 
-		: public type_trait<vector<forward_iterator<vector_10<TPLT_TEMPLATE_ARGUMENTS_CALL(10, Type)>>>> {};
+		: public cmn::type_trait<vector<forward_iterator<vector_10<TPLT_TEMPLATE_ARGUMENTS_CALL(10, Type)>>>> {};
 
 	template<TPLT_TEMPLATE_ARGUMENTS_DECL( 9, Type)> 
 	struct factory<TPLT_TEMPLATE_ARGUMENTS_CALL( 9, Type), TPLT_ARGUMENTS_CALL(1, invalid)>
-		: public type_trait<vector<forward_iterator<vector_9<TPLT_TEMPLATE_ARGUMENTS_CALL( 9, Type)>>>> {};
+		: public cmn::type_trait<vector<forward_iterator<vector_9<TPLT_TEMPLATE_ARGUMENTS_CALL( 9, Type)>>>> {};
 
 	template<TPLT_TEMPLATE_ARGUMENTS_DECL( 8, Type)> 
 	struct factory<TPLT_TEMPLATE_ARGUMENTS_CALL( 8, Type), TPLT_ARGUMENTS_CALL(2, invalid)>
-		: public type_trait<vector<forward_iterator<vector_8<TPLT_TEMPLATE_ARGUMENTS_CALL( 8, Type)>>>> {};
+		: public cmn::type_trait<vector<forward_iterator<vector_8<TPLT_TEMPLATE_ARGUMENTS_CALL( 8, Type)>>>> {};
 
 	template<TPLT_TEMPLATE_ARGUMENTS_DECL( 7, Type)> 
 	struct factory<TPLT_TEMPLATE_ARGUMENTS_CALL( 7, Type), TPLT_ARGUMENTS_CALL(3, invalid)>
-		: public type_trait<vector<forward_iterator<vector_7<TPLT_TEMPLATE_ARGUMENTS_CALL( 7, Type)>>>> {};
+		: public cmn::type_trait<vector<forward_iterator<vector_7<TPLT_TEMPLATE_ARGUMENTS_CALL( 7, Type)>>>> {};
 
 	template<TPLT_TEMPLATE_ARGUMENTS_DECL( 6, Type)> 
 	struct factory<TPLT_TEMPLATE_ARGUMENTS_CALL( 6, Type), TPLT_ARGUMENTS_CALL(4, invalid)>
-		: public type_trait<vector<forward_iterator<vector_6<TPLT_TEMPLATE_ARGUMENTS_CALL( 6, Type)>>>> {};
+		: public cmn::type_trait<vector<forward_iterator<vector_6<TPLT_TEMPLATE_ARGUMENTS_CALL( 6, Type)>>>> {};
 
 	template<TPLT_TEMPLATE_ARGUMENTS_DECL( 5, Type)> 
 	struct factory<TPLT_TEMPLATE_ARGUMENTS_CALL( 5, Type), TPLT_ARGUMENTS_CALL(5, invalid)>
-		: public type_trait<vector<forward_iterator<vector_5<TPLT_TEMPLATE_ARGUMENTS_CALL( 5, Type)>>>> {};
+		: public cmn::type_trait<vector<forward_iterator<vector_5<TPLT_TEMPLATE_ARGUMENTS_CALL( 5, Type)>>>> {};
 
 	template<TPLT_TEMPLATE_ARGUMENTS_DECL( 4, Type)> 
 	struct factory<TPLT_TEMPLATE_ARGUMENTS_CALL( 4, Type), TPLT_ARGUMENTS_CALL(6, invalid)>
-		: public type_trait<vector<forward_iterator<vector_4<TPLT_TEMPLATE_ARGUMENTS_CALL( 4, Type)>>>> {};
+		: public cmn::type_trait<vector<forward_iterator<vector_4<TPLT_TEMPLATE_ARGUMENTS_CALL( 4, Type)>>>> {};
 
 	template<TPLT_TEMPLATE_ARGUMENTS_DECL( 3, Type)> 
 	struct factory<TPLT_TEMPLATE_ARGUMENTS_CALL( 3, Type), TPLT_ARGUMENTS_CALL(7, invalid)>
-		: public type_trait<vector<forward_iterator<vector_3<TPLT_TEMPLATE_ARGUMENTS_CALL( 3, Type)>>>> {};
+		: public cmn::type_trait<vector<forward_iterator<vector_3<TPLT_TEMPLATE_ARGUMENTS_CALL( 3, Type)>>>> {};
 
 	template<TPLT_TEMPLATE_ARGUMENTS_DECL( 2, Type)> 
 	struct factory<TPLT_TEMPLATE_ARGUMENTS_CALL( 2, Type), TPLT_ARGUMENTS_CALL(8, invalid)>
-		: public type_trait<vector<forward_iterator<vector_2<TPLT_TEMPLATE_ARGUMENTS_CALL( 2, Type)>>>> {};
+		: public cmn::type_trait<vector<forward_iterator<vector_2<TPLT_TEMPLATE_ARGUMENTS_CALL( 2, Type)>>>> {};
 
 	template<TPLT_TEMPLATE_ARGUMENTS_DECL( 1, Type)> 
 	struct factory<TPLT_TEMPLATE_ARGUMENTS_CALL( 1, Type), TPLT_ARGUMENTS_CALL(9, invalid)>
-		: public type_trait<vector<forward_iterator<vector_1<TPLT_TEMPLATE_ARGUMENTS_CALL( 1, Type)>>>> {};
+		: public cmn::type_trait<vector<forward_iterator<vector_1<TPLT_TEMPLATE_ARGUMENTS_CALL( 1, Type)>>>> {};
 
 	template<> 
 	struct factory<TPLT_ARGUMENTS_CALL(10, invalid)>
-		: public type_trait<vector<>> {};
+		: public cmn::type_trait<vector<>> {};
 
 
 	template<typename Cursor, typename End, typename InitialValue, template<typename Value, typename Current> class Function>
@@ -131,19 +131,19 @@ namespace TYPE_VECTOR_NAMESPACE
 
 	template<typename Cursor, typename FinalValue, template<typename Value, typename Current> class Function>
 	struct accumulate<Cursor, Cursor, FinalValue, Function>
-		: public type_trait<FinalValue>
+		: public cmn::type_trait<FinalValue>
 	{
 	};
 
 	template<typename Cursor, typename End, size_t At, size_t Index = 0>
 	struct at
-		: public type_trait<typename std::conditional<At == Index, typename Cursor::type, typename at<typename Cursor::increment, End, At>::type>::type>
+		: public cmn::type_trait<typename std::conditional<At == Index, typename Cursor::type, typename at<typename Cursor::increment, End, At>::type>::type>
 	{
 	};
 
 	template<typename Cursor, size_t At, size_t Index>
 	struct at<Cursor, Cursor, At, Index>
-		: public type_trait<invalid>
+		: public cmn::type_trait<invalid>
 	{
 	};
 }
