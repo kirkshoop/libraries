@@ -8,7 +8,7 @@
 
 namespace UNIQUE_RESOURCE_NAMESPACE
 {
-	using namespace COMMON_NAMESPACE;
+	namespace cmn=COMMON_NAMESPACE;
 
 	//
 	// unique_resource will act like unique_ptr, but for non-pointer resources
@@ -27,7 +27,7 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 		template<typename ResourceTag, typename ResourceType>
 		auto 
 		find_unique_resource_indirect(int)
-			-> std::pair<std::true_type, decltype(unique_resource_indirect(instance_of<ResourceType>::value, ResourceTag()))>;
+			-> std::pair<std::true_type, decltype(unique_resource_indirect(cmn::instance_of<ResourceType>::value, ResourceTag()))>;
 
 		template<typename ResourceTag, typename ResourceType>
 		std::pair<std::false_type, void**> 
@@ -53,7 +53,7 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 		template<typename ResourceTag, typename ResourceType>
 		auto 
 		find_unique_resource_at(int)
-			-> std::pair<std::true_type, decltype(unique_resource_at(instance_of<ResourceType>::value, instance_of<size_t>::value, ResourceTag()))>;
+			-> std::pair<std::true_type, decltype(unique_resource_at(cmn::instance_of<ResourceType>::value, instance_of<size_t>::value, ResourceTag()))>;
 
 		template<typename ResourceTag, typename ResourceType>
 		std::pair<std::false_type, void**> 
@@ -144,7 +144,7 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 		unique_resource(unique_resource&& other);
 		unique_resource& operator=(unique_resource other);
 
-		operator typename unspecified_bool<this_type>::type() const;
+		operator typename cmn::unspecified_bool<this_type>::type() const;
 
 		typename detail::optional_indirect_result<tag>::type
 		operator->() const;

@@ -11,7 +11,7 @@
 
 namespace WINDOWS_RESOURCES_NAMESPACE
 {
-	using namespace COMMON_NAMESPACE;
+	namespace cmn=COMMON_NAMESPACE;
 
 	namespace detail
 	{
@@ -587,7 +587,7 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 		}
 	}
 	template<typename Interface>
-	struct unique_com_interface : public type_trait<UNIQUE_RESOURCE_NAMESPACE::unique_resource<detail::com_interface::tag<Interface>>>
+	struct unique_com_interface : public cmn::type_trait<UNIQUE_RESOURCE_NAMESPACE::unique_resource<detail::com_interface::tag<Interface>>>
 	{
 	};
 

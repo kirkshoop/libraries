@@ -37,7 +37,7 @@ namespace WIN32_WINDOW_NAMESPACE
 
 		// defaults that can be overriden
 		wcex.style = CS_HREDRAW | CS_VREDRAW;
-		wcex.hInstance = GetCurrentInstance();
+		wcex.hInstance = cmn::GetCurrentInstance();
 		wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
 
 		window_class_register(std::forward<T>(t), &wcex, tag());
@@ -93,7 +93,7 @@ namespace WIN32_WINDOW_NAMESPACE
 	}; \
  \
  	template<typename Type> \
-	optional ## CasedMessage ## Choice<Type> optional ## CasedMessage(Context<Type>* context, decltype(instance_of<Type>::value.On ## CasedMessage (instance_of<Context<Type>*>::value, TPLT_FUNCTION_ARGUMENT_INSTANCES(ParamCount, __VA_ARGS__))) ) \
+	optional ## CasedMessage ## Choice<Type> optional ## CasedMessage(Context<Type>* context, decltype(cmn::instance_of<Type>::value.On ## CasedMessage (instance_of<Context<Type>*>::value, TPLT_FUNCTION_ARGUMENT_INSTANCES(ParamCount, __VA_ARGS__))) ) \
 	{ \
 		return optional ## CasedMessage ## Choice<Type>(context); \
 	} \
@@ -184,7 +184,7 @@ namespace WIN32_WINDOW_NAMESPACE
 		{
 			return WindowCallbackSafe(hWnd, message, wParam, lParam);
 		}
-		__except(FailFastFilter(GetExceptionInformation()))
+		__except(cmn::FailFastFilter(GetExceptionInformation()))
 		{
 		}
 		return 0;

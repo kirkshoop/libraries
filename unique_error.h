@@ -8,7 +8,7 @@
 
 namespace UNIQUE_ERROR_NAMESPACE
 {
-	using namespace COMMON_NAMESPACE;
+	namespace cmn=COMMON_NAMESPACE;
 
 	class exception : public std::exception
 	{
@@ -176,9 +176,9 @@ namespace UNIQUE_ERROR_NAMESPACE
 			return *this;
 		}
 
-		operator typename unspecified_bool<this_type>::type() const
+		operator typename cmn::unspecified_bool<this_type>::type() const
 		{
-			return unspecified_bool<this_type>::get(ok());
+			return cmn::unspecified_bool<this_type>::get(ok());
 		}
 
 		this_type& reset()

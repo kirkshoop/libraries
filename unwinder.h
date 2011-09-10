@@ -8,7 +8,7 @@
 
 namespace UNWINDER_NAMESPACE
 {
-	using namespace COMMON_NAMESPACE;
+	namespace cmn=COMMON_NAMESPACE;
 
 	template<typename Function>
 	class unwinder

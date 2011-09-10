@@ -7,7 +7,7 @@
 
 namespace RANGE_NAMESPACE
 {
-	using namespace COMMON_NAMESPACE;
+	namespace cmn=COMMON_NAMESPACE;
 
 	template< class Range >
 	auto range_begin( Range&& r ) -> decltype( r.begin() )
@@ -58,25 +58,25 @@ namespace RANGE_NAMESPACE
 	}
 
 	template< class Range >
-	struct range_iterator : public type_trait< decltype(RANGE_NAMESPACE::begin(instance_of<Range>::value)) > {};
+	struct range_iterator : public cmn::type_trait< decltype(RANGE_NAMESPACE::begin(cmn::instance_of<Range>::value)) > {};
 
 	template< class BidirectionalRange >
-	struct range_reverse_iterator : public type_trait< std::reverse_iterator<typename range_iterator<BidirectionalRange>::type> > {};
+	struct range_reverse_iterator : public cmn::type_trait< std::reverse_iterator<typename range_iterator<BidirectionalRange>::type> > {};
 
 	template< class Range >
-	struct range_value : public type_trait< typename std::iterator_traits< typename range_iterator<Range>::type >::value_type > {};
+	struct range_value : public cmn::type_trait< typename std::iterator_traits< typename range_iterator<Range>::type >::value_type > {};
 
 	template< class Range >
-	struct range_reference : public type_trait< typename std::iterator_traits< typename range_iterator<Range>::type >::reference > {};
+	struct range_reference : public cmn::type_trait< typename std::iterator_traits< typename range_iterator<Range>::type >::reference > {};
 
 	template< class Range >
-	struct range_pointer : public type_trait< typename std::iterator_traits< typename range_iterator<Range>::type >::pointer > {};
+	struct range_pointer : public cmn::type_trait< typename std::iterator_traits< typename range_iterator<Range>::type >::pointer > {};
  
 	template< class Range >
-	struct range_difference : public type_trait< typename std::iterator_traits< typename range_iterator<Range>::type >::difference_type > {};
+	struct range_difference : public cmn::type_trait< typename std::iterator_traits< typename range_iterator<Range>::type >::difference_type > {};
 
 	template< class Range >
-	struct range_category : public type_trait< typename std::iterator_traits< typename range_iterator<Range>::type >::iterator_category > {};
+	struct range_category : public cmn::type_trait< typename std::iterator_traits< typename range_iterator<Range>::type >::iterator_category > {};
 
 	template< class Range >
 	bool empty( const Range& r )
@@ -192,9 +192,9 @@ namespace RANGE_NAMESPACE
 
 	public: // convenience
 
-		operator    typename unspecified_bool<this_type>::type() const
+		operator    typename cmn::unspecified_bool<this_type>::type() const
 		{
-			return unspecified_bool<this_type>::get();
+			return cmn::unspecified_bool<this_type>::get();
 		}
 
 		bool        equal( const range& r ) const
@@ -374,8 +374,8 @@ namespace RANGE_NAMESPACE
 		{
 			result = RANGE_NAMESPACE::make_range(&r[0], &r[0] + RANGE_NAMESPACE::size(r));
 		}
-		tmp.advance_begin(N); 
-		tmp.advance_end(M); 
+		result.advance_begin(advance_begin); 
+		result.advance_end(advance_end); 
 		return result;
 	}
 
@@ -385,8 +385,8 @@ namespace RANGE_NAMESPACE
 						   typename range_difference<Range>::type advance_end )
 	{
 		range<typename range_iterator<Range>::type> tmp(r); 
-		tmp.advance_begin(N); 
-		tmp.advance_end(M); 
+		tmp.advance_begin(advance_begin); 
+		tmp.advance_end(advance_end); 
 		return tmp;
 	}
 

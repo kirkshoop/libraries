@@ -43,15 +43,13 @@
 
 namespace LIBRARIES_NAMESPACE
 {
-	using namespace COMMON_NAMESPACE;
-	using namespace RANGE_NAMESPACE;
-	using namespace UNIQUE_ERROR_NAMESPACE;
-	using namespace UNIQUE_RESOURCE_NAMESPACE;
-	using namespace WINDOWS_RESOURCES_NAMESPACE;
-	using namespace WIN32_WINDOW_NAMESPACE;
+	namespace cmn=COMMON_NAMESPACE;
+	namespace rng=RANGE_NAMESPACE;
+	namespace wr=WINDOWS_RESOURCES_NAMESPACE;
+	namespace wnd=WIN32_WINDOW_NAMESPACE;
 	namespace tv=TYPE_VECTOR_NAMESPACE;
 	namespace of=ONE_OF_NAMESPACE;
-	namespace iset=INTERFACE_SET_NAMESPACE;
+	namespace ifset=INTERFACE_SET_NAMESPACE;
 	namespace com=COM_NAMESPACE;
 }
 

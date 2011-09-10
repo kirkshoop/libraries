@@ -166,9 +166,9 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 	}
 
 	template<typename ResourceTag>
-	unique_resource<ResourceTag>::operator typename unspecified_bool<unique_resource<ResourceTag>>::type() const
+	unique_resource<ResourceTag>::operator typename cmn::unspecified_bool<unique_resource<ResourceTag>>::type() const
 	{
-		return unspecified_bool<this_type>::get(!empty());
+		return cmn::unspecified_bool<this_type>::get(!empty());
 	}
 
 	template<typename ResourceTag>

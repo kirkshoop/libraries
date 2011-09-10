@@ -8,7 +8,7 @@
 
 namespace WIN32_WINDOW_NAMESPACE
 {
-	using namespace COMMON_NAMESPACE;
+	namespace cmn=COMMON_NAMESPACE;
 
 	template<typename Type>
 	struct window_class_traits_builder

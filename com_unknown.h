@@ -7,7 +7,7 @@
 
 namespace COM_NAMESPACE
 {
-	namespace iset=INTERFACE_SET_NAMESPACE;
+	namespace ifset=INTERFACE_SET_NAMESPACE;
 
 	namespace detail
 	{
@@ -19,8 +19,8 @@ namespace COM_NAMESPACE
 			{
 				if (IsEqualIID(__uuidof(Interface), riid))
 				{
-					iset::interface_cast<Interface>(that)->AddRef();
-					*outInterface = iset::interface_cast<Interface>(that);
+					ifset::interface_cast<Interface>(that)->AddRef();
+					*outInterface = ifset::interface_cast<Interface>(that);
 					return unique_hresult::cast(S_OK);
 				}
 				return Base::qi(that, riid, outInterface);
@@ -68,14 +68,14 @@ namespace COM_NAMESPACE
 					typedef
 						detail::qi_generator<
 							com_unknown<ComObjectTag, InterfaceBase, Base>,
-							typename iset::traits<ComObjectTag>::type::interfaces::begin,
-							typename iset::traits<ComObjectTag>::type::interfaces::begin,
-							typename iset::traits<ComObjectTag>::type::interfaces::end
+							typename ifset::traits<ComObjectTag>::type::interfaces::begin,
+							typename ifset::traits<ComObjectTag>::type::interfaces::begin,
+							typename ifset::traits<ComObjectTag>::type::interfaces::end
 						>::type
 					qi_interface;
 					return qi_interface::qi(this, riid, ppvObject);
 				}, 
-				iset::interface_tag<IUnknown>(), 
+				ifset::interface_tag<IUnknown>(), 
 				ComObjectTag()
 			);
 		}
@@ -84,7 +84,7 @@ namespace COM_NAMESPACE
 		{
 			return interface_storage(
 				this,
-				iset::interface_tag<IUnknown>(), 
+				ifset::interface_tag<IUnknown>(), 
 				ComObjectTag()
 			)->increment();
 		}
@@ -93,7 +93,7 @@ namespace COM_NAMESPACE
 		{
 			return interface_storage(
 				this,
-				iset::interface_tag<IUnknown>(), 
+				ifset::interface_tag<IUnknown>(), 
 				ComObjectTag()
 			)->decrement();
 		}
@@ -103,6 +103,6 @@ namespace COM_NAMESPACE
 
 template<template<typename Interface> class InterfaceBase, typename Base, typename ComObjectTag>
 COM_NAMESPACE::com_unknown<ComObjectTag, InterfaceBase, Base> 
-interface_implementation(COM_NAMESPACE::iset::interface_tag<IUnknown>&&, ComObjectTag&&);
+interface_implementation(COM_NAMESPACE::ifset::interface_tag<IUnknown>&&, ComObjectTag&&);
 
 #endif

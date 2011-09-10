@@ -145,7 +145,7 @@ namespace ONE_OF_NAMESPACE
 
 			template<typename T>
 			auto operator()(void* raw, size_t , size_t* selector, size_t current, T** storage)
-				-> decltype((new (nullptr) T(instance_of<Value>::value)), true)
+				-> decltype((new (nullptr) T(cmn::instance_of<Value>::value)), true)
 			{
 				new (raw) T(value);
 				*storage = reinterpret_cast<T*>(raw);
@@ -368,7 +368,7 @@ namespace ONE_OF_NAMESPACE
 
 		template<size_t At, typename FunctorIf, typename FunctorElse>
 		auto call_if_else(FunctorIf&& functorIf, FunctorElse&& functorElse)
-			-> decltype(std::forward<FunctorIf>(functorIf)(*traits::get_at<At>(lib::instance_of<traits::types>::value)))
+			-> decltype(std::forward<FunctorIf>(functorIf)(*traits::get_at<At>(cmn::instance_of<traits::types>::value)))
 		{
 			if (selector == At)
 			{
