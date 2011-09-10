@@ -51,58 +51,92 @@ namespace COM_NAMESPACE
 				qi_end<ComUnknown>
 			type;
 		};
+
+		template<typename ComObjectTag, template<typename Interface> class InterfaceBase, typename Base>
+		struct com_unknown
+			: public InterfaceBase<IUnknown>
+			, public Base
+		{
+			HRESULT STDMETHODCALLTYPE QueryInterface( 
+				REFIID riid,
+				void** ppvObject)
+			{
+				return com_function_contract_hresult(
+					[&]() -> unique_hresult
+					{
+						typedef
+							qi_generator<
+								com_unknown<ComObjectTag, InterfaceBase, Base>,
+								typename ifset::traits<ComObjectTag>::type::interfaces::begin,
+								typename ifset::traits<ComObjectTag>::type::interfaces::begin,
+								typename ifset::traits<ComObjectTag>::type::interfaces::end
+							>::type
+						qi_interface;
+						return qi_interface::qi(this, riid, ppvObject);
+					}, 
+					ifset::interface_tag<IUnknown>(), 
+					ComObjectTag()
+				);
+			}
+
+			ULONG STDMETHODCALLTYPE AddRef()
+			{
+				return interface_storage(
+					this,
+					ifset::interface_tag<IUnknown>(), 
+					ComObjectTag()
+				)->increment();
+			}
+
+			ULONG STDMETHODCALLTYPE Release()
+			{
+				return interface_storage(
+					this,
+					ifset::interface_tag<IUnknown>(), 
+					ComObjectTag()
+				)->decrement_and_destroy(this);
+			}
+		};
 	}
 
-	template<typename ComObjectTag, template<typename Interface> class InterfaceBase, typename Base>
-	struct com_unknown
-		: public InterfaceBase<IUnknown>
-		, public Base
+	struct refcount
 	{
-		HRESULT STDMETHODCALLTYPE QueryInterface( 
-			REFIID riid,
-			void** ppvObject)
+		virtual ~refcount() {}
+
+		refcount()
+			: count(0)
+		{}
+
+		ULONG increment()
 		{
-			return com_function_contract_hresult(
-				[&]() -> unique_hresult
-				{
-					typedef
-						detail::qi_generator<
-							com_unknown<ComObjectTag, InterfaceBase, Base>,
-							typename ifset::traits<ComObjectTag>::type::interfaces::begin,
-							typename ifset::traits<ComObjectTag>::type::interfaces::begin,
-							typename ifset::traits<ComObjectTag>::type::interfaces::end
-						>::type
-					qi_interface;
-					return qi_interface::qi(this, riid, ppvObject);
-				}, 
-				ifset::interface_tag<IUnknown>(), 
-				ComObjectTag()
-			);
+			return ++count;
 		}
 
-		ULONG STDMETHODCALLTYPE AddRef()
+		ULONG decrement_and_destroy(refcount* that)
 		{
-			return interface_storage(
-				this,
-				ifset::interface_tag<IUnknown>(), 
-				ComObjectTag()
-			)->increment();
+			auto result = --count;
+			if (result == 0)
+			{
+				delete that;
+			}
+			return result;
 		}
 
-		ULONG STDMETHODCALLTYPE Release()
-		{
-			return interface_storage(
-				this,
-				ifset::interface_tag<IUnknown>(), 
-				ComObjectTag()
-			)->decrement();
-		}
+		ULONG count;
 	};
 
+	template<typename Interface, typename InterfaceSet>
+	typename WINDOWS_RESOURCES_NAMESPACE::unique_com_interface<Interface>::type 
+	interface_cast(InterfaceSet* interfaces)
+	{
+		auto result = ifset::interface_cast<Interface>(interfaces);
+		result->AddRef();
+		return result;
+	}
 }
 
 template<template<typename Interface> class InterfaceBase, typename Base, typename ComObjectTag>
-COM_NAMESPACE::com_unknown<ComObjectTag, InterfaceBase, Base> 
+COM_NAMESPACE::detail::com_unknown<ComObjectTag, InterfaceBase, Base> 
 interface_implementation(COM_NAMESPACE::ifset::interface_tag<IUnknown>&&, ComObjectTag&&);
 
 #endif

@@ -160,7 +160,6 @@ namespace INTERFACE_SET_NAMESPACE
 	{
 		return static_cast<Interface*>(static_cast<detail::disambiguator<Interface>*>(interfaces));
 	}
-
 }
 
 #endif

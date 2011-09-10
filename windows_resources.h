@@ -590,6 +590,9 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 	struct unique_com_interface : public cmn::type_trait<UNIQUE_RESOURCE_NAMESPACE::unique_resource<detail::com_interface::tag<Interface>>>
 	{
 	};
+	typedef
+		unique_com_interface<IUnknown>::type
+	unique_com_unknown;
 
 	template<typename Interface>
 	std::pair<unique_hresult, typename unique_com_interface<Interface>::type> 
