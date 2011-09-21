@@ -31,7 +31,7 @@ unique_winerror;
 inline unique_winerror make_winerror_if(BOOL is_last_error)
 {
 	unique_winerror result;
-	if (!is_last_error)
+	if (is_last_error)
 	{
 		return std::move(result.reset(GetLastError()));
 	}

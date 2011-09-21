@@ -194,7 +194,7 @@ namespace RANGE_NAMESPACE
 
 		operator    typename cmn::unspecified_bool<this_type>::type() const
 		{
-			return cmn::unspecified_bool<this_type>::get();
+			return cmn::unspecified_bool<this_type>::get(!empty());
 		}
 
 		bool        equal( const range& r ) const
