@@ -24,11 +24,36 @@ namespace INTERFACE_SET_NAMESPACE
 		{
 		};
 
-		template<typename First, typename Second>
-		class BasePair
-			: public First
-			, public Second
+		template<typename Disambiguator, typename Base>
+		struct chain
+			: public Disambiguator
+			, public Base
 		{
+			~chain()
+			{}
+
+			chain()
+			{}
+
+			template<TPLT_TEMPLATE_ARGUMENTS_DECL(1, Param)>
+			explicit chain(TPLT_FUNCTION_ARGUMENTS_DECL(1, Param, , &&))
+				: Base(TPLT_FUNCTION_ARGUMENTS_CAST(1, Param, std::forward))
+			{}
+
+			template<TPLT_TEMPLATE_ARGUMENTS_DECL(2, Param)>
+			chain(TPLT_FUNCTION_ARGUMENTS_DECL(2, Param, , &&))
+				: Base(TPLT_FUNCTION_ARGUMENTS_CAST(2, Param, std::forward))
+			{}
+
+			template<TPLT_TEMPLATE_ARGUMENTS_DECL(3, Param)>
+			chain(TPLT_FUNCTION_ARGUMENTS_DECL(3, Param, , &&))
+				: Base(TPLT_FUNCTION_ARGUMENTS_CAST(3, Param, std::forward))
+			{}
+
+			template<TPLT_TEMPLATE_ARGUMENTS_DECL(4, Param)>
+			chain(TPLT_FUNCTION_ARGUMENTS_DECL(4, Param, , &&))
+				: Base(TPLT_FUNCTION_ARGUMENTS_CAST(4, Param, std::forward))
+			{}
 		};
 
 		template<typename Interface, typename Base>
@@ -80,7 +105,7 @@ namespace INTERFACE_SET_NAMESPACE
 					typename Cursor::type, 
 					decltype(
 						interface_implementation<
-							BasePair<disambiguator<typename Cursor::type>, next>
+							chain<disambiguator<typename Cursor::type>, next>
 						>(interface_tag<typename Cursor::type>(), InterfaceSetTag())
 					)
 				>

@@ -56,6 +56,32 @@ namespace COM_NAMESPACE
 		struct com_unknown
 			: public Base
 		{
+			~com_unknown()
+			{}
+
+			com_unknown()
+			{}
+
+			template<TPLT_TEMPLATE_ARGUMENTS_DECL(1, Param)>
+			explicit com_unknown(TPLT_FUNCTION_ARGUMENTS_DECL(1, Param, , &&))
+				: Base(TPLT_FUNCTION_ARGUMENTS_CAST(1, Param, std::forward))
+			{}
+
+			template<TPLT_TEMPLATE_ARGUMENTS_DECL(2, Param)>
+			com_unknown(TPLT_FUNCTION_ARGUMENTS_DECL(2, Param, , &&))
+				: Base(TPLT_FUNCTION_ARGUMENTS_CAST(2, Param, std::forward))
+			{}
+
+			template<TPLT_TEMPLATE_ARGUMENTS_DECL(3, Param)>
+			com_unknown(TPLT_FUNCTION_ARGUMENTS_DECL(3, Param, , &&))
+				: Base(TPLT_FUNCTION_ARGUMENTS_CAST(3, Param, std::forward))
+			{}
+
+			template<TPLT_TEMPLATE_ARGUMENTS_DECL(4, Param)>
+			com_unknown(TPLT_FUNCTION_ARGUMENTS_DECL(4, Param, , &&))
+				: Base(TPLT_FUNCTION_ARGUMENTS_CAST(4, Param, std::forward))
+			{}
+
 			HRESULT STDMETHODCALLTYPE QueryInterface( 
 				REFIID riid,
 				void** ppvObject)
@@ -65,7 +91,7 @@ namespace COM_NAMESPACE
 					{
 						typedef
 							qi_generator<
-								com_unknown<ComObjectTag, InterfaceBase, Base>,
+								com_unknown<ComObjectTag, Base>,
 								typename ifset::traits<ComObjectTag>::type::interfaces::begin,
 								typename ifset::traits<ComObjectTag>::type::interfaces::begin,
 								typename ifset::traits<ComObjectTag>::type::interfaces::end
@@ -103,7 +129,7 @@ namespace COM_NAMESPACE
 		virtual ~refcount() {}
 
 		refcount()
-			: count(0)
+			: count(1)
 		{}
 
 		ULONG increment()
