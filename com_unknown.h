@@ -52,10 +52,9 @@ namespace COM_NAMESPACE
 			type;
 		};
 
-		template<typename ComObjectTag, template<typename Interface> class InterfaceBase, typename Base>
+		template<typename ComObjectTag, typename Base>
 		struct com_unknown
-			: public InterfaceBase<IUnknown>
-			, public Base
+			: public Base
 		{
 			HRESULT STDMETHODCALLTYPE QueryInterface( 
 				REFIID riid,
@@ -135,8 +134,8 @@ namespace COM_NAMESPACE
 	}
 }
 
-template<template<typename Interface> class InterfaceBase, typename Base, typename ComObjectTag>
-COM_NAMESPACE::detail::com_unknown<ComObjectTag, InterfaceBase, Base> 
+template<typename Base, typename ComObjectTag>
+COM_NAMESPACE::detail::com_unknown<ComObjectTag, Base> 
 interface_implementation(COM_NAMESPACE::ifset::interface_tag<IUnknown>&&, ComObjectTag&&);
 
 #endif

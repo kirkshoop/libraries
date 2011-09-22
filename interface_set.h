@@ -24,6 +24,13 @@ namespace INTERFACE_SET_NAMESPACE
 		{
 		};
 
+		template<typename First, typename Second>
+		class BasePair
+			: public First
+			, public Second
+		{
+		};
+
 		template<typename Interface, typename Base>
 		class root
 			: public Base
@@ -73,8 +80,7 @@ namespace INTERFACE_SET_NAMESPACE
 					typename Cursor::type, 
 					decltype(
 						interface_implementation<
-							disambiguator,
-							next
+							BasePair<disambiguator<typename Cursor::type>, next>
 						>(interface_tag<typename Cursor::type>(), InterfaceSetTag())
 					)
 				>
