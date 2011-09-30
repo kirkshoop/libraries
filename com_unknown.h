@@ -132,6 +132,9 @@ namespace COM_NAMESPACE
 			: count(1)
 		{}
 
+		void interface_constructed(IUnknown*, ifset::interface_tag<IUnknown>&&) 
+		{}
+
 		ULONG increment()
 		{
 			return ++count;
@@ -160,8 +163,8 @@ namespace COM_NAMESPACE
 	}
 }
 
-template<typename Base, typename ComObjectTag>
-COM_NAMESPACE::detail::com_unknown<ComObjectTag, Base> 
-interface_implementation(COM_NAMESPACE::ifset::interface_tag<IUnknown>&&, ComObjectTag&&);
+template<typename ComObjectTag>
+COM_NAMESPACE::ifset::interface_traits_builder<COM_NAMESPACE::detail::com_unknown , COM_NAMESPACE::refcount>
+interface_tag_traits(COM_NAMESPACE::ifset::interface_tag<IUnknown>&&, ComObjectTag&&);
 
 #endif
