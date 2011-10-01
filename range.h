@@ -10,9 +10,9 @@ namespace RANGE_NAMESPACE
 	namespace cmn=COMMON_NAMESPACE;
 
 	template< class Range >
-	auto range_begin( Range&& r ) -> decltype( r.begin() )
+	auto range_begin( Range&& r ) -> decltype( std::forward<Range>(r).begin() )
 	{
-		return r.begin();
+		return std::forward<Range>(r).begin();
 	}
 
 	template< class Iterator >
@@ -28,15 +28,15 @@ namespace RANGE_NAMESPACE
 	}
 
 	template< class Range >
-	auto begin( Range&& r ) -> decltype( range_begin(r) )
+	auto begin( Range&& r ) -> decltype( range_begin(std::forward<Range>(r)) )
 	{
-		return range_begin(r);
+		return range_begin(std::forward<Range>(r));
 	}
 
 	template< class Range >
-	auto range_end( Range&& r ) -> decltype( r.end() )
+	auto range_end( Range&& r ) -> decltype( std::forward<Range>(r).end() )
 	{
-		return r.end();
+		return std::forward<Range>(r).end();
 	}
 
 	template< class Iterator >
@@ -52,9 +52,22 @@ namespace RANGE_NAMESPACE
 	}
 
 	template< class Range >
-	auto end( Range&& r ) -> decltype( range_end(r) )
+	auto end( Range&& r ) -> decltype( range_end(std::forward<Range>(r)) )
 	{
-		return range_end(r);
+		return range_end(std::forward<Range>(r));
+	}
+
+
+	template< class RangeTo, class RangeFrom >
+	auto range_copy( RangeFrom&& r, RangeTo* ) -> decltype( RangeTo(RANGE_NAMESPACE::begin(std::forward<RangeFrom>(r)), RANGE_NAMESPACE::end(std::forward<RangeFrom>(r))) )
+	{
+		return RangeTo(RANGE_NAMESPACE::begin(std::forward<RangeFrom>(r)), RANGE_NAMESPACE::end(std::forward<RangeFrom>(r)));
+	}
+
+	template< class RangeTo, class RangeFrom >
+	auto copy( RangeFrom&& r ) -> decltype( range_copy(std::forward<RangeFrom>(r), reinterpret_cast<RangeTo*>(nullptr)) )
+	{
+		return range_copy(std::forward<RangeFrom>(r), reinterpret_cast<RangeTo*>(nullptr));
 	}
 
 	template< class Range >
@@ -89,6 +102,16 @@ namespace RANGE_NAMESPACE
 	size( const RandomAccessRange& r )
 	{
 		return std::distance(RANGE_NAMESPACE::begin(r),RANGE_NAMESPACE::end(r));
+	}
+
+	template< class ResultType, class RandomAccessRange >
+	ResultType
+	size( const RandomAccessRange& r )
+	{
+		auto distance = std::distance(RANGE_NAMESPACE::begin(r),RANGE_NAMESPACE::end(r));
+		size_t distance_check = distance;
+		FAIL_FAST_IF((distance_check >> (sizeof(ResultType) * 8)) != 0, ERROR_INVALID_PARAMETER);
+		return static_cast<ResultType>(distance);
 	}
 
 	template< class BidirectionalRange >
@@ -352,6 +375,21 @@ namespace RANGE_NAMESPACE
 	}
 
 	template< class Range >
+	range<typename range_iterator<Range>::type> 
+	make_range( Range&& r, typename range_difference<Range>::type advance_begin,
+						   typename range_difference<Range>::type advance_end )
+	{
+		range<typename range_iterator<Range>::type> tmp(r); 
+		tmp.advance_begin(advance_begin); 
+		tmp.advance_end(advance_end); 
+		return tmp;
+	}
+
+	//
+	// raw ranges to interoperate with c functions
+	//
+
+	template< class Range >
 	auto
 	make_range_raw( Range&& r ) -> decltype(RANGE_NAMESPACE::make_range(&r[0], &r[0] + RANGE_NAMESPACE::size(r)))
 	{
@@ -379,18 +417,38 @@ namespace RANGE_NAMESPACE
 		return result;
 	}
 
-	template< class Range >
-	range<typename range_iterator<Range>::type> 
-	make_range( Range&& r, typename range_difference<Range>::type advance_begin,
-						   typename range_difference<Range>::type advance_end )
+	template< class NewIterator, class OldIterator >      
+	auto range_const_cast( const range<OldIterator*>& r ) -> decltype(range<NewIterator>(const_cast<NewIterator>(RANGE_NAMESPACE::begin(r)),const_cast<NewIterator>(RANGE_NAMESPACE::end(r))))
 	{
-		range<typename range_iterator<Range>::type> tmp(r); 
-		tmp.advance_begin(advance_begin); 
-		tmp.advance_end(advance_end); 
-		return tmp;
+		return range<NewIterator>(const_cast<NewIterator>(RANGE_NAMESPACE::begin(r)),const_cast<NewIterator>(RANGE_NAMESPACE::end(r)));
 	}
 
-	// comparison
+	template< class NewIterator, class OldIterator >      
+	auto range_static_cast( const range<OldIterator*>& r ) -> decltype(range<NewIterator>(static_cast<NewIterator>(RANGE_NAMESPACE::begin(r)),static_cast<NewIterator>(RANGE_NAMESPACE::end(r))))
+	{
+		return range<NewIterator>(static_cast<NewIterator>(RANGE_NAMESPACE::begin(r)),static_cast<NewIterator>(RANGE_NAMESPACE::end(r)));
+	}
+
+	template< class NewIterator, class OldIterator >      
+	auto range_reinterpret_cast( const range<OldIterator*>& r ) -> decltype(range<NewIterator>(reinterpret_cast<NewIterator>(RANGE_NAMESPACE::begin(r)),reinterpret_cast<NewIterator>(RANGE_NAMESPACE::end(r))))
+	{
+		return range<NewIterator>(reinterpret_cast<NewIterator>(RANGE_NAMESPACE::begin(r)),reinterpret_cast<NewIterator>(RANGE_NAMESPACE::end(r)));
+	}
+
+
+	template< class ResultType, class InputType >
+	ResultType
+	size_cast( InputType size )
+	{
+		size_t size_check = size;
+		FAIL_FAST_IF((size_check >> (sizeof(ResultType) * 8)) != 0, ERROR_INVALID_PARAMETER);
+		return static_cast<ResultType>(size);
+	}
+
+	//
+	// comparisons
+	//
+
 	template< class Iterator, class Iterator2 >
 	bool operator==( range<Iterator> l, range<Iterator2> r )
 	{
@@ -487,12 +545,6 @@ namespace RANGE_NAMESPACE
 	}
 
            
-	template< class CopyableRange, class Range >      
-	CopyableRange copy_range( const Range& r )
-	{
-		return CopyableRange(RANGE_NAMESPACE::begin(r),RANGE_NAMESPACE::end(r));
-	}
-
 	template< class ForwardRange >
 	typename range_difference<ForwardRange>::type
 	distance( const ForwardRange& r )
