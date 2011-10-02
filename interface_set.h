@@ -87,50 +87,105 @@ namespace INTERFACE_SET_NAMESPACE
 			{}
 		};
 
-		template<typename InterfaceSetTag, typename Interface, typename Base>
-		class root
-			: public Base
+		template<typename Storage>
+		class storage
+			: public Storage
 		{
-		private:
+		protected:
 			void set_interface()
 			{
-				 interface_storage(
+			}
+
+		public:
+			typedef
+				Storage
+			storage_type;
+
+			typedef
+				Storage*
+			storage_pointer;
+
+			~storage()
+			{}
+
+			storage()
+			{}
+
+			template<TPLT_TEMPLATE_ARGUMENTS_DECL(1, Param)>
+			explicit storage(TPLT_FUNCTION_ARGUMENTS_DECL(1, Param, , &&))
+				: Storage(TPLT_FUNCTION_ARGUMENTS_CAST(1, Param, std::forward))
+			{}
+
+			template<TPLT_TEMPLATE_ARGUMENTS_DECL(2, Param)>
+			storage(TPLT_FUNCTION_ARGUMENTS_DECL(2, Param, , &&))
+				: Storage(TPLT_FUNCTION_ARGUMENTS_CAST(2, Param, std::forward))
+			{}
+
+			template<TPLT_TEMPLATE_ARGUMENTS_DECL(3, Param)>
+			storage(TPLT_FUNCTION_ARGUMENTS_DECL(3, Param, , &&))
+				: Storage(TPLT_FUNCTION_ARGUMENTS_CAST(3, Param, std::forward))
+			{}
+
+			template<TPLT_TEMPLATE_ARGUMENTS_DECL(4, Param)>
+			storage(TPLT_FUNCTION_ARGUMENTS_DECL(4, Param, , &&))
+				: Storage(TPLT_FUNCTION_ARGUMENTS_CAST(4, Param, std::forward))
+			{}
+
+			storage_pointer storage_get()
+			{
+				return this;
+			}
+
+		private:
+			storage(const storage&);
+			storage& operator=(const storage&);
+		};
+
+		template<typename InterfaceSetTag, typename Interface, typename Base>
+		class impl
+			: public Base
+		{
+		protected:
+			void set_interface()
+			{
+				interface_storage(
 					this,
 					ifset::interface_tag<Interface>(), 
 					InterfaceSetTag()
 				)->interface_constructed(ifset::interface_cast<Interface>(this), ifset::interface_tag<Interface>());
+				Base::set_interface();
 			}
 
 		public:
-			~root()
+			~impl()
 			{}
 
-			root()
-			{set_interface();}
+			impl()
+			{}
 
 			template<TPLT_TEMPLATE_ARGUMENTS_DECL(1, Param)>
-			explicit root(TPLT_FUNCTION_ARGUMENTS_DECL(1, Param, , &&))
+			explicit impl(TPLT_FUNCTION_ARGUMENTS_DECL(1, Param, , &&))
 				: Base(TPLT_FUNCTION_ARGUMENTS_CAST(1, Param, std::forward))
-			{set_interface();}
+			{}
 
 			template<TPLT_TEMPLATE_ARGUMENTS_DECL(2, Param)>
-			root(TPLT_FUNCTION_ARGUMENTS_DECL(2, Param, , &&))
+			impl(TPLT_FUNCTION_ARGUMENTS_DECL(2, Param, , &&))
 				: Base(TPLT_FUNCTION_ARGUMENTS_CAST(2, Param, std::forward))
-			{set_interface();}
+			{}
 
 			template<TPLT_TEMPLATE_ARGUMENTS_DECL(3, Param)>
-			root(TPLT_FUNCTION_ARGUMENTS_DECL(3, Param, , &&))
+			impl(TPLT_FUNCTION_ARGUMENTS_DECL(3, Param, , &&))
 				: Base(TPLT_FUNCTION_ARGUMENTS_CAST(3, Param, std::forward))
-			{set_interface();}
+			{}
 
 			template<TPLT_TEMPLATE_ARGUMENTS_DECL(4, Param)>
-			root(TPLT_FUNCTION_ARGUMENTS_DECL(4, Param, , &&))
+			impl(TPLT_FUNCTION_ARGUMENTS_DECL(4, Param, , &&))
 				: Base(TPLT_FUNCTION_ARGUMENTS_CAST(4, Param, std::forward))
-			{set_interface();}
+			{}
 
 		private:
-			root(const root&);
-			root& operator=(const root&);
+			impl(const impl&);
+			impl& operator=(const impl&);
 		};
 
 		template<typename InterfaceSetTag, typename Cursor, typename Begin, typename End, typename Storage>
@@ -153,7 +208,7 @@ namespace INTERFACE_SET_NAMESPACE
 			interface_implementor;
 
 			typedef
-				root<
+				impl<
 					InterfaceSetTag,
 					typename Cursor::type, 
 					interface_implementor
@@ -166,7 +221,7 @@ namespace INTERFACE_SET_NAMESPACE
 		{
 		public:
 			typedef
-				Storage
+				storage<Storage>
 			type;
 		};
 	}
@@ -204,31 +259,38 @@ namespace INTERFACE_SET_NAMESPACE
 			>::type
 		base;
 
+	private:
+		void set_interface()
+		{
+			base::set_interface();
+		}
+
+	public:
 		~interface_set()
 		{}
 
 		interface_set() 
-		{}
+		{set_interface();}
 
 		template<TPLT_TEMPLATE_ARGUMENTS_DECL(1, Param)>
 		explicit interface_set(TPLT_FUNCTION_ARGUMENTS_DECL(1, Param, , &&))
 			: base(TPLT_FUNCTION_ARGUMENTS_CAST(1, Param, std::forward))
-		{}
+		{set_interface();}
 
 		template<TPLT_TEMPLATE_ARGUMENTS_DECL(2, Param)>
 		interface_set(TPLT_FUNCTION_ARGUMENTS_DECL(2, Param, , &&))
 			: base(TPLT_FUNCTION_ARGUMENTS_CAST(2, Param, std::forward))
-		{}
+		{set_interface();}
 
 		template<TPLT_TEMPLATE_ARGUMENTS_DECL(3, Param)>
 		interface_set(TPLT_FUNCTION_ARGUMENTS_DECL(3, Param, , &&))
 			: base(TPLT_FUNCTION_ARGUMENTS_CAST(3, Param, std::forward))
-		{}
+		{set_interface();}
 
 		template<TPLT_TEMPLATE_ARGUMENTS_DECL(4, Param)>
 		interface_set(TPLT_FUNCTION_ARGUMENTS_DECL(4, Param, , &&))
 			: base(TPLT_FUNCTION_ARGUMENTS_CAST(4, Param, std::forward))
-		{}
+		{set_interface();}
 
 	private:
 		interface_set(const interface_set&);

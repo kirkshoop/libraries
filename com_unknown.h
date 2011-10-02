@@ -107,7 +107,7 @@ namespace COM_NAMESPACE
 			ULONG STDMETHODCALLTYPE AddRef()
 			{
 				return interface_storage(
-					this,
+					storage_get(),
 					ifset::interface_tag<IUnknown>(), 
 					ComObjectTag()
 				)->increment();
@@ -116,7 +116,7 @@ namespace COM_NAMESPACE
 			ULONG STDMETHODCALLTYPE Release()
 			{
 				return interface_storage(
-					this,
+					storage_get(),
 					ifset::interface_tag<IUnknown>(), 
 					ComObjectTag()
 				)->decrement_and_destroy(this);
