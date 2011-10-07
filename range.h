@@ -57,7 +57,6 @@ namespace RANGE_NAMESPACE
 		return range_end(std::forward<Range>(r));
 	}
 
-
 	template< class RangeTo, class RangeFrom >
 	auto range_copy( RangeFrom&& r, RangeTo* ) -> decltype( RangeTo(RANGE_NAMESPACE::begin(std::forward<RangeFrom>(r)), RANGE_NAMESPACE::end(std::forward<RangeFrom>(r))) )
 	{
@@ -102,16 +101,6 @@ namespace RANGE_NAMESPACE
 	size( const RandomAccessRange& r )
 	{
 		return std::distance(RANGE_NAMESPACE::begin(r),RANGE_NAMESPACE::end(r));
-	}
-
-	template< class ResultType, class RandomAccessRange >
-	ResultType
-	size( const RandomAccessRange& r )
-	{
-		auto distance = std::distance(RANGE_NAMESPACE::begin(r),RANGE_NAMESPACE::end(r));
-		size_t distance_check = distance;
-		FAIL_FAST_IF((distance_check >> (sizeof(ResultType) * 8)) != 0, ERROR_INVALID_PARAMETER);
-		return static_cast<ResultType>(distance);
 	}
 
 	template< class BidirectionalRange >
@@ -440,8 +429,24 @@ namespace RANGE_NAMESPACE
 	ResultType
 	size_cast( InputType size )
 	{
-		size_t size_check = size;
-		FAIL_FAST_IF((size_check >> (sizeof(ResultType) * 8)) != 0, ERROR_INVALID_PARAMETER);
+		const static size_t bitsOfPositiveRepresentationInResultType = 
+			(sizeof(ResultType) * 8) - static_cast<ResultType>(std::is_signed<ResultType>::value);
+		const static size_t bitsOfPositiveRepresentationInInputType = 
+			(sizeof(InputType) * 8) - static_cast<InputType>(std::is_signed<InputType>::value);
+		typedef
+			std::conditional<
+				bitsOfPositiveRepresentationInResultType <
+					bitsOfPositiveRepresentationInInputType,
+				InputType,
+				ResultType
+			>::type
+		check_type;
+		check_type size_check = static_cast<check_type>(size);
+		FAIL_FAST_IF(
+			(false, (std::is_signed<InputType>::value && size < 0)) ||
+				(size_check >> (bitsOfPositiveRepresentationInResultType - 1)) != 0, 
+			ERROR_INVALID_PARAMETER
+		);
 		return static_cast<ResultType>(size);
 	}
 
