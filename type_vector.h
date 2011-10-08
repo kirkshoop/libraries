@@ -137,7 +137,7 @@ namespace TYPE_VECTOR_NAMESPACE
 
 	template<typename Cursor, typename End, size_t At, size_t Index = 0>
 	struct at
-		: public cmn::type_trait<typename std::conditional<At == Index, typename Cursor::type, typename at<typename Cursor::increment, End, At>::type>::type>
+		: public cmn::type_trait<typename std::conditional<At == Index, typename Cursor::type, typename at<typename Cursor::increment, End, At, Index + 1>::type>::type>
 	{
 	};
 

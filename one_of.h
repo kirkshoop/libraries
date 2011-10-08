@@ -36,14 +36,14 @@ namespace ONE_OF_NAMESPACE
 			};
 
 			template<size_t At>
-			static typename tv::at<Begin, End, At>::type* get_at(types current, typename std::enable_if<At == index, void**>::type x = 0)
+			static typename tv::at<Begin, End, At>::type* get_at(types& current, typename std::enable_if<At == index, void**>::type x = 0)
 			{
 				UNREFERENCED_PARAMETER(x);
 				return current.pointer;
 			}
 
 			template<size_t At>
-			static typename tv::at<Begin, End, At>::type* get_at(types current, ...)
+			static typename tv::at<Begin, End, At>::type* get_at(types& current, ...)
 			{
 				return base::get_at<At>(current.next);
 			}
@@ -376,6 +376,69 @@ namespace ONE_OF_NAMESPACE
 			}
 			return std::forward<FunctorElse>(functorElse)();
 		}
+
+#define ONE_OF_SWITCH_CASE(Selector, Prefix) \
+	case Selector - 1: \
+		return std::forward<Prefix ## _T ## Selector>(Prefix ## _t ## Selector)(*traits::get_at<Selector - 1>(types));
+
+#define ONE_OF_SWITCH_CASES(Count, Value, Prefix) \
+	static_assert(traits::size == Count, "need a function for each type, plus a default. types=" # Count); \
+	switch (Value) \
+	{ \
+		ONE_OF_SWITCH_CASES_ ## Count (Prefix) \
+	}
+#define ONE_OF_SWITCH_CASES_1(Prefix)                               ONE_OF_SWITCH_CASE(1, Prefix)
+#define ONE_OF_SWITCH_CASES_2(Prefix) ONE_OF_SWITCH_CASES_1(Prefix) ONE_OF_SWITCH_CASE(2, Prefix)
+#define ONE_OF_SWITCH_CASES_3(Prefix) ONE_OF_SWITCH_CASES_2(Prefix) ONE_OF_SWITCH_CASE(3, Prefix)
+#define ONE_OF_SWITCH_CASES_4(Prefix) ONE_OF_SWITCH_CASES_3(Prefix) ONE_OF_SWITCH_CASE(4, Prefix)
+#define ONE_OF_SWITCH_CASES_5(Prefix) ONE_OF_SWITCH_CASES_4(Prefix) ONE_OF_SWITCH_CASE(5, Prefix)
+#define ONE_OF_SWITCH_CASES_6(Prefix) ONE_OF_SWITCH_CASES_5(Prefix) ONE_OF_SWITCH_CASE(6, Prefix)
+#define ONE_OF_SWITCH_CASES_7(Prefix) ONE_OF_SWITCH_CASES_6(Prefix) ONE_OF_SWITCH_CASE(7, Prefix)
+#define ONE_OF_SWITCH_CASES_8(Prefix) ONE_OF_SWITCH_CASES_7(Prefix) ONE_OF_SWITCH_CASE(8, Prefix)
+#define ONE_OF_SWITCH_CASES_9(Prefix) ONE_OF_SWITCH_CASES_8(Prefix) ONE_OF_SWITCH_CASE(9, Prefix)
+#define ONE_OF_SWITCH_CASES_10(Prefix) ONE_OF_SWITCH_CASES_9(Prefix) ONE_OF_SWITCH_CASE(10, Prefix)
+
+
+		template<TPLT_TEMPLATE_ARGUMENTS_DECL(1, FunctorCase), typename FunctorDefault>
+		auto call_switch(TPLT_FUNCTION_ARGUMENTS_DECL(1, FunctorCase, , &&), FunctorDefault&& functorDefault)
+			-> decltype(std::forward<FunctorCase_T1>(FunctorCase_t1)(*traits::get_at<0>(cmn::instance_of<traits::types>::value)))
+		{
+			ONE_OF_SWITCH_CASES(1, selector, FunctorCase);
+			return std::forward<FunctorDefault>(functorDefault)();
+		}
+
+		template<TPLT_TEMPLATE_ARGUMENTS_DECL(2, FunctorCase), typename FunctorDefault>
+		auto call_switch(TPLT_FUNCTION_ARGUMENTS_DECL(2, FunctorCase, , &&), FunctorDefault&& functorDefault)
+			-> decltype(std::forward<FunctorCase_T1>(FunctorCase_t1)(*traits::get_at<0>(cmn::instance_of<traits::types>::value)))
+		{
+			ONE_OF_SWITCH_CASES(2, selector, FunctorCase);
+			return std::forward<FunctorDefault>(functorDefault)();
+		}
+
+		template<TPLT_TEMPLATE_ARGUMENTS_DECL(3, FunctorCase), typename FunctorDefault>
+		auto call_switch(TPLT_FUNCTION_ARGUMENTS_DECL(3, FunctorCase, , &&), FunctorDefault&& functorDefault)
+			-> decltype(std::forward<FunctorCase_T1>(FunctorCase_t1)(*traits::get_at<0>(cmn::instance_of<traits::types>::value)))
+		{
+			ONE_OF_SWITCH_CASES(3, selector, FunctorCase);
+			return std::forward<FunctorDefault>(functorDefault)();
+		}
+
+		template<TPLT_TEMPLATE_ARGUMENTS_DECL(4, FunctorCase), typename FunctorDefault>
+		auto call_switch(TPLT_FUNCTION_ARGUMENTS_DECL(4, FunctorCase, , &&), FunctorDefault&& functorDefault)
+			-> decltype(std::forward<FunctorCase_T1>(FunctorCase_t1)(*traits::get_at<0>(cmn::instance_of<traits::types>::value)))
+		{
+			ONE_OF_SWITCH_CASES(4, selector, FunctorCase);
+			return std::forward<FunctorDefault>(functorDefault)();
+		}
+
+		template<TPLT_TEMPLATE_ARGUMENTS_DECL(5, FunctorCase), typename FunctorDefault>
+		auto call_switch(TPLT_FUNCTION_ARGUMENTS_DECL(5, FunctorCase, , &&), FunctorDefault&& functorDefault)
+			-> decltype(std::forward<FunctorCase_T1>(FunctorCase_t1)(*traits::get_at<0>(cmn::instance_of<traits::types>::value)))
+		{
+			ONE_OF_SWITCH_CASES(5, selector, FunctorCase);
+			return std::forward<FunctorDefault>(functorDefault)();
+		}
+
 
 	private:
 		size_t selector;
