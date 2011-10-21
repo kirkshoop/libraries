@@ -288,21 +288,21 @@ namespace ONE_OF_NAMESPACE
 			: selector(traits::size)
 		{
 			detail::Copy<this_type> copyFunc(this);
-			traits::each(&storage, &selector, types, copyFunc);
+			other::traits::each(&other.storage, &other.selector, other.types, copyFunc);
 		}
 
 		one_of(one_of&& other)
 			: selector(traits::size)
 		{
 			detail::Move<this_type> moveFunc(this);
-			traits::each(&storage, &selector, types, moveFunc);
+			other::traits::each(&other.storage, &other.selector, other.types, moveFunc);
 		}
 
 		one_of& operator=(one_of other)
 		{
 			reset();
 			detail::Move<this_type> moveFunc(this);
-			traits::each(&storage, &selector, types, moveFunc);
+			other::traits::each(&other.storage, &other.selector, other.types, moveFunc);
 			return *this;
 		}
 

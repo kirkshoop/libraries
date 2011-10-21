@@ -28,6 +28,7 @@
 #define INTERFACE_SET_NAMESPACE nsintset
 #include "interface_set.h"
 
+#ifndef LIBRARIES_VC11_ICE
 #define WINDOWS_RESOURCES_NAMESPACE nswinrsrc
 #include "windows_resources.h"
 
@@ -36,6 +37,7 @@
 
 #define WIN32_WINDOW_NAMESPACE nswin32window
 #include "win32_window.h"
+#endif
 
 #ifndef LIBRARIES_NAMESPACE
 #error LIBRARIES_NAMESPACE must be defined
@@ -45,12 +47,14 @@ namespace LIBRARIES_NAMESPACE
 {
 	namespace cmn=COMMON_NAMESPACE;
 	namespace rng=RANGE_NAMESPACE;
-	namespace wr=WINDOWS_RESOURCES_NAMESPACE;
-	namespace wnd=WIN32_WINDOW_NAMESPACE;
 	namespace tv=TYPE_VECTOR_NAMESPACE;
 	namespace of=ONE_OF_NAMESPACE;
 	namespace ifset=INTERFACE_SET_NAMESPACE;
+#ifndef LIBRARIES_VC11_ICE
+	namespace wr=WINDOWS_RESOURCES_NAMESPACE;
+	namespace wnd=WIN32_WINDOW_NAMESPACE;
 	namespace com=COM_NAMESPACE;
+#endif
 }
 
 #endif // LIBRARIES_SOURCE
