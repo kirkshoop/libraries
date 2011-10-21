@@ -58,14 +58,24 @@ namespace ONE_OF_NAMESPACE
 				base::set_at<At>(current.next, raw);
 			}
 
-			template<typename Functor>
-			static void each(void* storage, size_t* selector, types current, Functor&& functor)
+			template<typename State, typename Functor>
+			static void each(void* storage, size_t* selector, types& current, State&& state, Functor&& functor)
 			{
-				if (std::forward<Functor>(functor)(storage, size, selector, index, &current.pointer))
+				if (std::forward<Functor>(functor)(storage, size, selector, index, std::forward<State>(state), &current.pointer))
 				{
 					return ;
 				}
-				return base::each<Functor>(storage, selector, current.next, std::forward<Functor>(functor));
+				return base::each(storage, selector, current.next, std::forward<State>(state), std::forward<Functor>(functor));
+			}
+
+			template<typename State, typename Functor>
+			static void each(const void* storage, const size_t* selector, const types& current, State&& state, Functor&& functor)
+			{
+				if (std::forward<Functor>(functor)(storage, size, selector, index, std::forward<State>(state), &current.pointer))
+				{
+					return ;
+				}
+				return base::each(storage, selector, current.next, std::forward<State>(state), std::forward<Functor>(functor));
 			}
 		};
 
@@ -109,18 +119,27 @@ namespace ONE_OF_NAMESPACE
 			{
 			}
 
-			template<typename Functor>
-			static void each(void* storage, size_t* selector, types current, Functor&& functor)
+			template<typename State, typename Functor>
+			static void each(void* storage, size_t* selector, types& current, State&& state, Functor&& functor)
 			{
-				std::forward<Functor>(functor)(storage, size, selector, size, &current.pointer);
+				std::forward<Functor>(functor)(storage, size, selector, size, std::forward<State>(state), &current.pointer);
 			}
 
+			template<typename State, typename Functor>
+			static void each(const void* storage, const size_t* selector, const types& current, State&& state, Functor&& functor)
+			{
+				std::forward<Functor>(functor)(storage, size, selector, size, std::forward<State>(state), &current.pointer);
+			}
 		};
 
 		struct Reset
 		{
+			Reset() {}
+
+			struct State {};
+
 			template<typename T>
-			bool operator()(void* , size_t size, size_t* selector, size_t current, T** storage)
+			bool operator()(void* , size_t size, size_t* selector, size_t current, State&&, T** storage)
 			{
 				if (*selector == current)
 				{
@@ -133,27 +152,22 @@ namespace ONE_OF_NAMESPACE
 			}
 		};
 
-		template<typename Value>
 		struct ResetValue
 		{
-			Value&& value;
+			ResetValue() {}
 
-			explicit ResetValue(Value&& valueArg)
-				: value(valueArg)
+			template<typename Value, typename T>
+			auto operator()(void* raw, size_t , size_t* selector, size_t current, Value&& value, T** storage)
+				-> decltype((new (raw) T(std::forward<Value>(value))), true)
 			{
-			}
-
-			template<typename T>
-			auto operator()(void* raw, size_t , size_t* selector, size_t current, T** storage)
-				-> decltype((new (nullptr) T(cmn::instance_of<Value>::value)), true)
-			{
-				new (raw) T(value);
+				new (raw) T(std::forward<Value>(value));
 				*storage = reinterpret_cast<T*>(raw);
 				*selector = current;
 				return true;
 			}
 
-			bool operator()(void* , size_t , size_t* , size_t , void** )
+			template<typename Value>
+			bool operator()(void* , size_t , size_t* , size_t , Value&& , void** )
 			{
 				return false;
 			}
@@ -168,28 +182,24 @@ namespace ONE_OF_NAMESPACE
 			ResetValue& operator=(const ResetValue&);
 		};
 
-		template<typename Functor>
 		struct Call
 		{
-			Functor&& functor;
+			Call() {}
 
-			explicit Call(Functor&& functorArg)
-				: functor(functorArg)
-			{
-			}
-
-			template<typename T>
-			bool operator()(void* , size_t , size_t* selector, size_t current, T** storage)
+			template<typename Functor, typename T>
+			typename std::enable_if<!std::is_same<T, void>::value, bool>::type 
+			operator()(const void* , size_t , const size_t* selector, size_t current, Functor&& functor, T* const* storage)
 			{
 				if (*selector == current)
 				{
-					std::forward<Functor>(functor)(**storage);
+					auto t = *storage;
+					std::forward<Functor>(functor)(*t);
 					return true;
 				}
 				return false;
 			}
 
-			bool operator()(void* , size_t , size_t* , size_t , void** )
+			bool operator()(...)
 			{
 				return false;
 			}
@@ -199,24 +209,25 @@ namespace ONE_OF_NAMESPACE
 			Call& operator=(const Call&);
 		};
 
-		template<typename OneOf>
 		struct Copy
 		{
-			OneOf* that;
+			Copy() {}
 
-			explicit Copy(OneOf* thatArg)
-				: that(thatArg)
-			{
-			}
-
-			template<typename T>
-			bool operator()(void* , size_t , size_t* selector, size_t current, T** storage)
+			template<typename That, typename T>
+			typename std::enable_if<!std::is_same<T, void>::value, bool>::type 
+			operator()(const void* , size_t , const size_t* selector, size_t current, That&& that, T* const* storage)
 			{
 				if (*selector == current)
 				{
-					that->reset(**storage);
+					auto t = *storage;
+					std::forward<That>(that)->reset(*t);
 					return true;
 				}
+				return false;
+			}
+
+			bool operator()(...)
+			{
 				return false;
 			}
 
@@ -225,26 +236,28 @@ namespace ONE_OF_NAMESPACE
 			Copy& operator=(const Copy&);
 		};
 
-		template<typename OneOf>
 		struct Move
 		{
-			OneOf* that;
+			Move() {}
 
-			explicit Move(OneOf* thatArg)
-				: that(thatArg)
-			{
-			}
-
-			template<typename T>
-			bool operator()(void* , size_t size, size_t* selector, size_t current, T** storage)
+			template<typename That, typename T>
+			typename std::enable_if<!std::is_same<T, void>::value, bool>::type 
+			operator()(void* , size_t size, size_t* selector, size_t current, That&& that, T** storage)
 			{
 				if (*selector == current)
 				{
-					that->reset(std::move(**storage));
+					auto t = *storage;
+					std::forward<That>(that)->reset(std::move(*t));
+					(*storage)->~T();
 					*storage = nullptr;
 					*selector = size;
 					return true;
 				}
+				return false;
+			}
+
+			bool operator()(...)
+			{
 				return false;
 			}
 
@@ -278,7 +291,7 @@ namespace ONE_OF_NAMESPACE
 		}
 
 		template<typename T>
-		explicit one_of(T&& value)
+		explicit one_of(T&& value, typename std::enable_if<std::is_same<T, this_type>::value, void**>::type x = nullptr)
 			: selector(traits::size)
 		{
 			reset(std::forward<T>(value));
@@ -287,22 +300,22 @@ namespace ONE_OF_NAMESPACE
 		one_of(const one_of& other)
 			: selector(traits::size)
 		{
-			detail::Copy<this_type> copyFunc(this);
-			other::traits::each(&other.storage, &other.selector, other.types, copyFunc);
+			detail::Copy copyFunc;
+			traits::each(&other.storage, &other.selector, other.types, this, copyFunc);
 		}
 
 		one_of(one_of&& other)
 			: selector(traits::size)
 		{
-			detail::Move<this_type> moveFunc(this);
-			other::traits::each(&other.storage, &other.selector, other.types, moveFunc);
+			detail::Move moveFunc;
+			traits::each(&other.storage, &other.selector, other.types, this, moveFunc);
 		}
 
 		one_of& operator=(one_of other)
 		{
 			reset();
-			detail::Move<this_type> moveFunc(this);
-			other::traits::each(&other.storage, &other.selector, other.types, moveFunc);
+			detail::Move moveFunc;
+			other::traits::each(&other.storage, &other.selector, other.types, this, moveFunc);
 			return *this;
 		}
 
@@ -321,7 +334,7 @@ namespace ONE_OF_NAMESPACE
 			if (!empty())
 			{
 				detail::Reset resetFunc;
-				traits::each(&storage, &selector, types, resetFunc);
+				traits::each(&storage, &selector, types, detail::Reset::State(), resetFunc);
 			}
 		}
 
@@ -329,8 +342,8 @@ namespace ONE_OF_NAMESPACE
 		void reset(T&& value)
 		{
 			reset();
-			detail::ResetValue<T> resetFunc(value);
-			traits::each(&storage, &selector, types, resetFunc);
+			detail::ResetValue resetFunc;
+			traits::each(&storage, &selector, types, std::forward<T>(value), resetFunc);
 		}
 
 		template<size_t At, typename T>
@@ -362,8 +375,8 @@ namespace ONE_OF_NAMESPACE
 		template<typename Functor>
 		void call(Functor&& functor)
 		{
-			detail::Call<Functor> callFunc(functor);
-			traits::each(&storage, &selector, types, callFunc);
+			detail::Call callFunc;
+			traits::each(&storage, &selector, types, std::forward<Functor>(functor), callFunc);
 		}
 
 		template<size_t At, typename FunctorIf, typename FunctorElse>
@@ -382,7 +395,7 @@ namespace ONE_OF_NAMESPACE
 		return std::forward<Prefix ## _T ## Selector>(Prefix ## _t ## Selector)(*traits::get_at<Selector - 1>(types));
 
 #define ONE_OF_SWITCH_CASES(Count, Value, Prefix) \
-	static_assert(traits::size == Count, "need a function for each type, plus a default. types=" # Count); \
+	static_assert(traits::size == Count, "need a function for each type, plus a default. functions needed=1 + 1 + " # Count); \
 	switch (Value) \
 	{ \
 		ONE_OF_SWITCH_CASES_ ## Count (Prefix) \

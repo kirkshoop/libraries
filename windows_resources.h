@@ -82,7 +82,7 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 		namespace gdi_release_dc
 		{
 			struct tag {};
-			inline std::pair<HWND, HDC> unique_resource_invalid(tag&&) { return std::make_pair(nullptr, nullptr); }
+			inline std::pair<HWND, HDC> unique_resource_invalid(tag&&) { return std::pair<HWND, HDC>(); }
 			inline void unique_resource_reset(std::pair<HWND, HDC> resource, tag&&) { ReleaseDC(resource.first, resource.second); }
 		}
 	}
@@ -95,7 +95,7 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 		namespace gdi_end_paint
 		{
 			struct tag {};
-			inline std::pair<HWND, PAINTSTRUCT*> unique_resource_invalid(tag&&) { return std::make_pair(nullptr, nullptr); }
+			inline std::pair<HWND, PAINTSTRUCT*> unique_resource_invalid(tag&&) { return std::pair<HWND, PAINTSTRUCT*>(); }
 			inline void unique_resource_reset(std::pair<HWND, PAINTSTRUCT*> resource, tag&&) { EndPaint(resource.first, resource.second); }
 		}
 	}
