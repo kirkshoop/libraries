@@ -135,6 +135,45 @@ namespace TYPE_VECTOR_NAMESPACE
 	{
 	};
 
+	template<typename Cursor, typename End, typename SearchValue, template<typename SearchValue, typename Iterator> class Function, typename Result=Cursor, bool Found = false>
+	struct find_if
+		: public find_if<typename Cursor::increment, End, SearchValue, Function, Cursor, Function<SearchValue, Cursor>::value>
+	{
+	};
+
+	template<typename Cursor, typename End, typename SearchValue, template<typename Value, typename Current> class Function, typename Result>
+	struct find_if<Cursor, End, SearchValue, Function, Result, true>
+		: public cmn::type_trait<Result>
+	{
+	};
+
+	template<typename End, typename SearchValue, template<typename Value, typename Current> class Function, typename Result>
+	struct find_if<End, End, SearchValue, Function, Result, false>
+		: public cmn::type_trait<End>
+	{
+	};
+
+	namespace detail
+	{
+		template<typename Cursor, typename End, typename Result>
+		struct distance
+			: public detail::distance<typename Cursor::increment, End, std::integral_constant<size_t, 1 + Result::value>>
+		{
+		};
+
+		template<typename Cursor, typename Result>
+		struct distance<Cursor, Cursor, Result>
+			: public Result
+		{
+		};
+	}
+
+	template<typename Cursor, typename End>
+	struct distance
+		: public detail::distance<typename Cursor, End, std::integral_constant<size_t, 0>>
+	{
+	};
+
 	template<typename Cursor, typename End, size_t At, size_t Index = 0>
 	struct at
 		: public cmn::type_trait<typename std::conditional<At == Index, typename Cursor::type, typename at<typename Cursor::increment, End, At, Index + 1>::type>::type>
@@ -146,6 +185,7 @@ namespace TYPE_VECTOR_NAMESPACE
 		: public cmn::type_trait<invalid>
 	{
 	};
+
 }
 
 #endif // TYPE_VECTOR_SOURCE
