@@ -6,32 +6,43 @@
 namespace UNIQUE_RESOURCE_NAMESPACE
 {
 
-	template<typename ResourceTag>
-	// static 
-	typename detail::optional_make_default_result<ResourceTag>::type
-	unique_resource<ResourceTag>::make() 
+	template<typename UniqueResource>
+	decltype(unique_resource_make(UniqueResource::tag()))
+	make()
 	{
-		return unique_resource_make(tag());
+		return unique_resource_make(UniqueResource::tag());
 	}
 
-	template<typename ResourceTag>
-	template<TPLT_TEMPLATE_ARGUMENTS_DECL(1, Param)>
-	// static 
+	template<typename UniqueResource, TPLT_TEMPLATE_ARGUMENTS_DECL(1, Param)>
 	auto 
-	unique_resource<ResourceTag>::make(TPLT_FUNCTION_ARGUMENTS_DECL(1, Param, , &&)) 
-		-> decltype(unique_resource_make(TPLT_FUNCTION_ARGUMENTS_CAST(1, Param, std::forward), tag()))
+	make(TPLT_FUNCTION_ARGUMENTS_DECL(1, Param, , &&)) 
+		-> decltype(unique_resource_make(TPLT_FUNCTION_ARGUMENTS_CAST(1, Param, std::forward), UniqueResource::tag()))
 	{
-		return unique_resource_make(TPLT_FUNCTION_ARGUMENTS_CAST(1, Param, std::forward), tag());
+		return unique_resource_make(TPLT_FUNCTION_ARGUMENTS_CAST(1, Param, std::forward), UniqueResource::tag());
 	}
 
-	template<typename ResourceTag>
-	template<TPLT_TEMPLATE_ARGUMENTS_DECL(2, Param)>
-	// static 
+	template<typename UniqueResource, TPLT_TEMPLATE_ARGUMENTS_DECL(2, Param)>
 	auto 
-	unique_resource<ResourceTag>::make(TPLT_FUNCTION_ARGUMENTS_DECL(2, Param, , &&)) 
-		-> decltype(unique_resource_make(TPLT_FUNCTION_ARGUMENTS_CAST(2, Param, std::forward), tag()))
+	make(TPLT_FUNCTION_ARGUMENTS_DECL(2, Param, , &&)) 
+		-> decltype(unique_resource_make(TPLT_FUNCTION_ARGUMENTS_CAST(2, Param, std::forward), UniqueResource::tag()))
 	{
-		return unique_resource_make(TPLT_FUNCTION_ARGUMENTS_CAST(2, Param, std::forward), tag());
+		return unique_resource_make(TPLT_FUNCTION_ARGUMENTS_CAST(2, Param, std::forward), UniqueResource::tag());
+	}
+
+	template<typename UniqueResource>
+	auto
+	at(const UniqueResource& resource, size_t index)
+		-> decltype(unique_resource_at(resource.get(), index, UniqueResource::tag()))
+	{
+		return unique_resource_at(resource.get(), index, UniqueResource::tag());
+	}
+
+	template<typename UniqueResource>
+	auto
+	at(UniqueResource&& resource, size_t index)
+		-> decltype(unique_resource_at(resource.get(), index, UniqueResource::tag()))
+	{
+		return unique_resource_at(resource.get(), index, UniqueResource::tag());
 	}
 
 	template<typename ResourceTag>
@@ -67,31 +78,31 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 	}
 
 	template<typename ResourceTag>
-	typename detail::optional_indirect_result<ResourceTag>::type
+	typename unique_resource<ResourceTag>::optional_indirect_result
 	unique_resource<ResourceTag>::operator->() const
 	{
-		return unique_resource_indirect(resource, tag());
+		return detail::optional_unique_resource_indirect<tag_type>(resource, 0);
 	}
 
 	template<typename ResourceTag>
-	typename detail::optional_indirect_result<ResourceTag>::type
+	typename unique_resource<ResourceTag>::optional_indirect_result
 	unique_resource<ResourceTag>::operator->()
 	{
-		return unique_resource_indirect(resource, tag());
+		return detail::optional_unique_resource_indirect<tag_type>(resource, 0);
 	}
 
 	template<typename ResourceTag>
-	typename detail::optional_at_result<ResourceTag>::type
+	typename unique_resource<ResourceTag>::optional_at_result
 	unique_resource<ResourceTag>::operator[] (size_t index) const
 	{
-		return unique_resource_at(resource, index, tag());
+		return detail::optional_unique_resource_at<tag_type>(resource, index, 0);
 	}
 
 	template<typename ResourceTag>
-	typename detail::optional_at_result<ResourceTag>::type
+	typename unique_resource<ResourceTag>::optional_at_result
 	unique_resource<ResourceTag>::operator[] (size_t index)
 	{
-		return unique_resource_at(resource, index, tag());
+		return detail::optional_unique_resource_at<tag_type>(resource, index, 0);
 	}
 
 	namespace detail 
@@ -108,7 +119,7 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 	{
 		if (!empty())
 		{
-			FAIL_FAST_ON_THROW([&]{detail::unique_resource_reset<tag>(std::addressof(resource));});
+			FAIL_FAST_ON_THROW([&]{detail::unique_resource_reset<tag_type>(std::addressof(resource));});
 			resource = unique_resource_invalid(tag());
 		}
 	}
@@ -162,7 +173,7 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 	template<typename ResourceTag>
 	bool unique_resource<ResourceTag>::empty() const
 	{
-		return detail::optional_unique_resource_empty<tag>(resource, 0);
+		return detail::optional_unique_resource_empty<tag_type>(resource, 0);
 	}
 
 	template<typename ResourceTag>

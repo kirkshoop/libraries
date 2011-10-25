@@ -48,6 +48,7 @@ namespace LIBRARIES_NAMESPACE
 	namespace rng=RANGE_NAMESPACE;
 	namespace tv=TYPE_VECTOR_NAMESPACE;
 	namespace of=ONE_OF_NAMESPACE;
+	namespace ur=UNIQUE_RESOURCE_NAMESPACE;
 	namespace ifset=INTERFACE_SET_NAMESPACE;
 	namespace wr=WINDOWS_RESOURCES_NAMESPACE;
 	namespace wnd=WIN32_WINDOW_NAMESPACE;

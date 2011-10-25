@@ -13,6 +13,9 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 {
 	namespace cmn=COMMON_NAMESPACE;
 
+	using UNIQUE_RESOURCE_NAMESPACE::make;
+	using UNIQUE_RESOURCE_NAMESPACE::at;
+
 	namespace detail
 	{
 		template<typename Resource>
@@ -194,18 +197,6 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 			}
 
 			template<typename T>
-			const RANGE_NAMESPACE::range<T*>* unique_resource_indirect(const RANGE_NAMESPACE::range<T*>& resource, tag<T[]>&&) 
-			{ 
-				return &resource; 
-			}
-
-			template<typename T>
-			RANGE_NAMESPACE::range<T*>* unique_resource_indirect(RANGE_NAMESPACE::range<T*>& resource, tag<T[]>&&) 
-			{ 
-				return &resource; 
-			}
-
-			template<typename T>
 			void unique_resource_reset(RANGE_NAMESPACE::range<T*> resource, tag<T[]>&&) 
 			{ 
 				std::for_each(
@@ -226,7 +217,7 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 			}
 
 			template<typename T>
-			T& unique_resource_at(RANGE_NAMESPACE::range<T*> resource, size_t index, tag<T[]>&&) 
+			T& unique_resource_at(RANGE_NAMESPACE::range<T*>&& resource, size_t index, tag<T[]>&&) 
 			{ 
 				return resource[index]; 
 			}
@@ -375,16 +366,16 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 				typedef
 					UNIQUE_RESOURCE_NAMESPACE::unique_resource<tag<T>>
 				Unique;
+				Unique unique;
 				T* resource = nullptr;
 				ON_UNWIND(unwindResource, [&] { if (resource) { CoTaskMemFree(resource); } });
 				resource = reinterpret_cast<T*>(CoTaskMemAlloc(sizeof(T)));
-				auto winerror = make_winerror_if(!resource);
+				unique_winerror winerror = make_winerror_if(!resource);
 				if (!winerror)
 				{
-					return std::make_pair(std::move(winerror), Unique());
+					return std::make_pair(std::move(winerror), std::move(unique));
 				}
 				new (resource) T();
-				Unique unique;
 				unique.reset(resource);
 				unwindResource.dismiss();
 				return std::make_pair(std::move(winerror), std::move(unique));
@@ -427,18 +418,6 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 			}
 
 			template<typename T>
-			const RANGE_NAMESPACE::range<T*>* unique_resource_indirect(const RANGE_NAMESPACE::range<T*>& resource, tag<T[]>&&) 
-			{ 
-				return &resource; 
-			}
-
-			template<typename T>
-			RANGE_NAMESPACE::range<T*>* unique_resource_indirect(RANGE_NAMESPACE::range<T*>& resource, tag<T[]>&&) 
-			{ 
-				return &resource; 
-			}
-
-			template<typename T>
 			void unique_resource_reset(RANGE_NAMESPACE::range<T*> resource, tag<T[]>&&) 
 			{ 
 				std::for_each(
@@ -453,13 +432,13 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 			}
 
 			template<typename T>
-			bool unique_resource_empty(RANGE_NAMESPACE::range<T*> resource, tag<T[]>&&) 
+			bool unique_resource_empty(RANGE_NAMESPACE::range<T*>&& resource, tag<T[]>&&) 
 			{ 
 				return resource.empty();
 			}
 
 			template<typename T>
-			T& unique_resource_at(RANGE_NAMESPACE::range<T*> resource, size_t index, tag<T[]>&&) 
+			T& unique_resource_at(RANGE_NAMESPACE::range<T*>&& resource, size_t index, tag<T[]>&&) 
 			{ 
 				return resource[index]; 
 			}
