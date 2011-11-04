@@ -48,9 +48,12 @@ namespace WIN32_WINDOW_NAMESPACE
 		return RegisterClassEx(&wcex);
 	}
 
-	template<typename Type>
+	template<typename WindowClassTag>
 	struct Context
 	{
+		typedef
+			typename window_class<WindowClassTag>::traits::type
+		Type;
 		Type* type;
 		HWND window;
 		UINT message;
@@ -71,10 +74,10 @@ namespace WIN32_WINDOW_NAMESPACE
 
 
 #define WINDOW_MESSAGE_OPTIONAL( CapitalMessage, CasedMessage, ParamCount, ...) \
-	template<typename Type> \
+	template<typename WindowClassTag> \
 	struct optional ## CasedMessage ## Choice \
 	{ \
-		optional ## CasedMessage ## Choice(Context<Type>* contextArg) \
+		optional ## CasedMessage ## Choice(Context<WindowClassTag>* contextArg) \
 			: context(contextArg) \
 		{ } \
  \
@@ -84,20 +87,20 @@ namespace WIN32_WINDOW_NAMESPACE
 			if (context->message == WM_ ## CapitalMessage) \
 			{ \
 				*context->handled = TRUE; \
-				*context->result = context->type->On ## CasedMessage (const_cast<const Context<Type>*>(context), TPLT_FUNCTION_ARGUMENTS_CAST(ParamCount, Param, std::forward)); \
+				*context->result = context->type->On ## CasedMessage (const_cast<const Context<WindowClassTag>*>(context), TPLT_FUNCTION_ARGUMENTS_CAST(ParamCount, Param, std::forward)); \
 			} \
 			return 0; \
 		} \
  \
-		Context<Type>* context; \
+		Context<WindowClassTag>* context; \
 	}; \
  \
- 	template<typename Type> \
-	optional ## CasedMessage ## Choice<Type> optional ## CasedMessage(Context<Type>* context, decltype(cmn::instance_of<Type>::value.On ## CasedMessage (instance_of<Context<Type>*>::value, TPLT_FUNCTION_ARGUMENT_INSTANCES(ParamCount, __VA_ARGS__))) ) \
+ 	template<typename WindowClassTag> \
+	optional ## CasedMessage ## Choice<WindowClassTag> optional ## CasedMessage(Context<WindowClassTag>* context, decltype(cmn::instance_of<typename Context<WindowClassTag>::Type>::value.On ## CasedMessage (cmn::instance_of<Context<WindowClassTag>*>::value, TPLT_FUNCTION_ARGUMENT_INSTANCES(ParamCount, __VA_ARGS__))) ) \
 	{ \
-		return optional ## CasedMessage ## Choice<Type>(context); \
+		return optional ## CasedMessage ## Choice<WindowClassTag>(context); \
 	} \
- \
+\
 	inline nohandler optional ## CasedMessage (...) \
 	{ \
 		return nohandler(); \
@@ -132,7 +135,7 @@ namespace WIN32_WINDOW_NAMESPACE
 		SetLastError(0);
 
 		auto result = SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(type.get()));
-		ON_UNWIND(UserDataUnwind, [&]{SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(nullptr));});
+		ON_UNWIND(UserDataUnwind, [&]{SetWindowLongPtr(hwnd, GWLP_USERDATA, 0);});
 
 		unique_winerror winerror = make_winerror_if(!result);
 
@@ -172,7 +175,7 @@ namespace WIN32_WINDOW_NAMESPACE
  	template<typename Type, typename WindowClassTag> 
 	void optional_window_class_erase(HWND hwnd, Type* type, WindowClassTag&&, ...) 
 	{ 
-		SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(nullptr));
+		SetWindowLongPtr(hwnd, GWLP_USERDATA, 0);
 		delete type;
 	}
 
@@ -209,7 +212,7 @@ namespace WIN32_WINDOW_NAMESPACE
 
 		if (type)
 		{
-			Context<traits::type> context = {type, hWnd, message, wParam, lParam, &handled, &result};
+			Context<WindowClassTag> context = {type, hWnd, message, wParam, lParam, &handled, &result};
 
 #			define WINDOW_MESSAGE_OPTIONAL( CapitalMessage, CasedMessage, ParamCount, ...) \
 						HANDLE_WM_ ## CapitalMessage(hWnd, wParam, lParam, optional ## CasedMessage(&context, 0));

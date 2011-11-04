@@ -49,6 +49,19 @@ namespace ONE_OF_NAMESPACE
 			}
 
 			template<size_t At>
+			static const typename tv::at<Begin, End, At>::type* get_at(const types& current, typename std::enable_if<At == index, void**>::type x = 0)
+			{
+				UNREFERENCED_PARAMETER(x);
+				return current.pointer;
+			}
+
+			template<size_t At>
+			static const typename tv::at<Begin, End, At>::type* get_at(const types& current, ...)
+			{
+				return base::get_at<At>(current.next);
+			}
+
+			template<size_t At>
 			static void set_at(types& current, void* raw)
 			{
 				if (0, At == index)
@@ -111,7 +124,13 @@ namespace ONE_OF_NAMESPACE
 			};
 
 			template<size_t At>
-			static typename tv::at<Begin, Cursor, At>::type* get_at(types )
+			static typename tv::at<Begin, Cursor, At>::type* get_at(types& )
+			{
+				return nullptr;
+			}
+
+			template<size_t At>
+			static const typename tv::at<Begin, Cursor, At>::type* get_at(const types& )
 			{
 				return nullptr;
 			}
@@ -140,6 +159,11 @@ namespace ONE_OF_NAMESPACE
 		{
 		};
 
+		template <typename SearchValue, typename Cursor>
+		struct convertableType
+			: public std::is_convertible<SearchValue, typename Cursor::type>
+		{
+		};
 
 		struct Reset
 		{
@@ -304,15 +328,15 @@ namespace ONE_OF_NAMESPACE
 		template<size_t At, typename T>
 		void selected_reset(T&& value, reset_at_selector&&)
 		{
-			detail::ResetValue resetFunc;
-			traits::each(&storage, &selector, types, std::forward<T>(value), resetFunc);
+			reset_at<At>(std::forward<T>(value));
 		}
 
 		struct reset_value_selector {};
 		template<size_t At, typename T>
 		void selected_reset(T&& value, reset_value_selector&&)
 		{
-			reset_at<At>(std::forward<T>(value));
+			detail::ResetValue resetFunc;
+			traits::each(&storage, &selector, types, std::forward<T>(value), resetFunc);
 		}
 
 	public:
@@ -381,6 +405,12 @@ namespace ONE_OF_NAMESPACE
 
 			typedef
 				typename tv::find_if<typename Vector::begin, typename Vector::end, std::decay<T>::type, detail::sameType>::type
+			convertable_iterator;
+
+			static_assert(!std::is_same<convertable_iterator, typename Vector::end>::value, "type cannot be stored");
+
+			typedef
+				typename tv::find_if<typename Vector::begin, typename Vector::end, std::decay<T>::type, detail::sameType>::type
 			type_iterator;
 
 			typedef
@@ -390,7 +420,7 @@ namespace ONE_OF_NAMESPACE
 			selected_reset<type_at::value>(
 				std::forward<T>(value), 
 				typename std::conditional<
-					type_at::value == 0, 
+					type_at::value == traits::size, 
 					reset_value_selector, 
 					reset_at_selector>::type());
 		}
@@ -454,8 +484,26 @@ namespace ONE_OF_NAMESPACE
 			traits::each(&storage, &selector, types, std::forward<Functor>(functor), callFunc);
 		}
 
+		template<typename Functor>
+		void call(Functor&& functor) const
+		{
+			detail::Call callFunc;
+			traits::each(&storage, &selector, types, std::forward<Functor>(functor), callFunc);
+		}
+
 		template<size_t At, typename FunctorIf, typename FunctorElse>
 		auto call_at_else(FunctorIf&& functorIf, FunctorElse&& functorElse)
+			-> decltype(std::forward<FunctorIf>(functorIf)(*traits::get_at<At>(cmn::instance_of<traits::types>::value)))
+		{
+			if (selector == At)
+			{
+				return std::forward<FunctorIf>(functorIf)(*traits::get_at<At>(types));
+			}
+			return std::forward<FunctorElse>(functorElse)();
+		}
+
+		template<size_t At, typename FunctorIf, typename FunctorElse>
+		auto call_at_else(FunctorIf&& functorIf, FunctorElse&& functorElse) const
 			-> decltype(std::forward<FunctorIf>(functorIf)(*traits::get_at<At>(cmn::instance_of<traits::types>::value)))
 		{
 			if (selector == At)
@@ -495,8 +543,24 @@ namespace ONE_OF_NAMESPACE
 			return std::forward<FunctorDefault>(functorDefault)();
 		}
 
+		template<TPLT_TEMPLATE_ARGUMENTS_DECL(1, FunctorCase), typename FunctorDefault>
+		auto call_switch(TPLT_FUNCTION_ARGUMENTS_DECL(1, FunctorCase, , &&), FunctorDefault&& functorDefault) const
+			-> decltype(std::forward<FunctorCase_T1>(FunctorCase_t1)(*traits::get_at<0>(cmn::instance_of<traits::types>::value)))
+		{
+			ONE_OF_SWITCH_CASES(1, selector, FunctorCase);
+			return std::forward<FunctorDefault>(functorDefault)();
+		}
+
 		template<TPLT_TEMPLATE_ARGUMENTS_DECL(2, FunctorCase), typename FunctorDefault>
 		auto call_switch(TPLT_FUNCTION_ARGUMENTS_DECL(2, FunctorCase, , &&), FunctorDefault&& functorDefault)
+			-> decltype(std::forward<FunctorCase_T1>(FunctorCase_t1)(*traits::get_at<0>(cmn::instance_of<traits::types>::value)))
+		{
+			ONE_OF_SWITCH_CASES(2, selector, FunctorCase);
+			return std::forward<FunctorDefault>(functorDefault)();
+		}
+
+		template<TPLT_TEMPLATE_ARGUMENTS_DECL(2, FunctorCase), typename FunctorDefault>
+		auto call_switch(TPLT_FUNCTION_ARGUMENTS_DECL(2, FunctorCase, , &&), FunctorDefault&& functorDefault) const
 			-> decltype(std::forward<FunctorCase_T1>(FunctorCase_t1)(*traits::get_at<0>(cmn::instance_of<traits::types>::value)))
 		{
 			ONE_OF_SWITCH_CASES(2, selector, FunctorCase);
@@ -511,8 +575,25 @@ namespace ONE_OF_NAMESPACE
 			return std::forward<FunctorDefault>(functorDefault)();
 		}
 
+		template<TPLT_TEMPLATE_ARGUMENTS_DECL(3, FunctorCase), typename FunctorDefault>
+		auto call_switch(TPLT_FUNCTION_ARGUMENTS_DECL(3, FunctorCase, , &&), FunctorDefault&& functorDefault) const
+			-> decltype(std::forward<FunctorCase_T1>(FunctorCase_t1)(*traits::get_at<0>(cmn::instance_of<traits::types>::value)))
+		{
+			ONE_OF_SWITCH_CASES(3, selector, FunctorCase);
+			return std::forward<FunctorDefault>(functorDefault)();
+		}
+
+
 		template<TPLT_TEMPLATE_ARGUMENTS_DECL(4, FunctorCase), typename FunctorDefault>
 		auto call_switch(TPLT_FUNCTION_ARGUMENTS_DECL(4, FunctorCase, , &&), FunctorDefault&& functorDefault)
+			-> decltype(std::forward<FunctorCase_T1>(FunctorCase_t1)(*traits::get_at<0>(cmn::instance_of<traits::types>::value)))
+		{
+			ONE_OF_SWITCH_CASES(4, selector, FunctorCase);
+			return std::forward<FunctorDefault>(functorDefault)();
+		}
+
+		template<TPLT_TEMPLATE_ARGUMENTS_DECL(4, FunctorCase), typename FunctorDefault>
+		auto call_switch(TPLT_FUNCTION_ARGUMENTS_DECL(4, FunctorCase, , &&), FunctorDefault&& functorDefault) const
 			-> decltype(std::forward<FunctorCase_T1>(FunctorCase_t1)(*traits::get_at<0>(cmn::instance_of<traits::types>::value)))
 		{
 			ONE_OF_SWITCH_CASES(4, selector, FunctorCase);
@@ -527,6 +608,14 @@ namespace ONE_OF_NAMESPACE
 			return std::forward<FunctorDefault>(functorDefault)();
 		}
 
+		template<TPLT_TEMPLATE_ARGUMENTS_DECL(5, FunctorCase), typename FunctorDefault>
+		auto call_switch(TPLT_FUNCTION_ARGUMENTS_DECL(5, FunctorCase, , &&), FunctorDefault&& functorDefault) const
+			-> decltype(std::forward<FunctorCase_T1>(FunctorCase_t1)(*traits::get_at<0>(cmn::instance_of<traits::types>::value)))
+		{
+			ONE_OF_SWITCH_CASES(5, selector, FunctorCase);
+			return std::forward<FunctorDefault>(functorDefault)();
+		}
+
 		template<TPLT_TEMPLATE_ARGUMENTS_DECL(6, FunctorCase), typename FunctorDefault>
 		auto call_switch(TPLT_FUNCTION_ARGUMENTS_DECL(6, FunctorCase, , &&), FunctorDefault&& functorDefault)
 			-> decltype(std::forward<FunctorCase_T1>(FunctorCase_t1)(*traits::get_at<0>(cmn::instance_of<traits::types>::value)))
@@ -535,8 +624,24 @@ namespace ONE_OF_NAMESPACE
 			return std::forward<FunctorDefault>(functorDefault)();
 		}
 
+		template<TPLT_TEMPLATE_ARGUMENTS_DECL(6, FunctorCase), typename FunctorDefault>
+		auto call_switch(TPLT_FUNCTION_ARGUMENTS_DECL(6, FunctorCase, , &&), FunctorDefault&& functorDefault) const
+			-> decltype(std::forward<FunctorCase_T1>(FunctorCase_t1)(*traits::get_at<0>(cmn::instance_of<traits::types>::value)))
+		{
+			ONE_OF_SWITCH_CASES(6, selector, FunctorCase);
+			return std::forward<FunctorDefault>(functorDefault)();
+		}
+
 		template<TPLT_TEMPLATE_ARGUMENTS_DECL(7, FunctorCase), typename FunctorDefault>
-		auto call_switch(TPLT_FUNCTION_ARGUMENTS_DECL(7, FunctorCase, , &&), FunctorDefault&& functorDefault)
+		auto call_switch(TPLT_FUNCTION_ARGUMENTS_DECL(7, FunctorCase, , &&), FunctorDefault&& functorDefault) 
+			-> decltype(std::forward<FunctorCase_T1>(FunctorCase_t1)(*traits::get_at<0>(cmn::instance_of<traits::types>::value)))
+		{
+			ONE_OF_SWITCH_CASES(7, selector, FunctorCase);
+			return std::forward<FunctorDefault>(functorDefault)();
+		}
+
+		template<TPLT_TEMPLATE_ARGUMENTS_DECL(7, FunctorCase), typename FunctorDefault>
+		auto call_switch(TPLT_FUNCTION_ARGUMENTS_DECL(7, FunctorCase, , &&), FunctorDefault&& functorDefault) const
 			-> decltype(std::forward<FunctorCase_T1>(FunctorCase_t1)(*traits::get_at<0>(cmn::instance_of<traits::types>::value)))
 		{
 			ONE_OF_SWITCH_CASES(7, selector, FunctorCase);
@@ -551,6 +656,14 @@ namespace ONE_OF_NAMESPACE
 			return std::forward<FunctorDefault>(functorDefault)();
 		}
 
+		template<TPLT_TEMPLATE_ARGUMENTS_DECL(8, FunctorCase), typename FunctorDefault>
+		auto call_switch(TPLT_FUNCTION_ARGUMENTS_DECL(8, FunctorCase, , &&), FunctorDefault&& functorDefault) const
+			-> decltype(std::forward<FunctorCase_T1>(FunctorCase_t1)(*traits::get_at<0>(cmn::instance_of<traits::types>::value)))
+		{
+			ONE_OF_SWITCH_CASES(8, selector, FunctorCase);
+			return std::forward<FunctorDefault>(functorDefault)();
+		}
+
 		template<TPLT_TEMPLATE_ARGUMENTS_DECL(9, FunctorCase), typename FunctorDefault>
 		auto call_switch(TPLT_FUNCTION_ARGUMENTS_DECL(9, FunctorCase, , &&), FunctorDefault&& functorDefault)
 			-> decltype(std::forward<FunctorCase_T1>(FunctorCase_t1)(*traits::get_at<0>(cmn::instance_of<traits::types>::value)))
@@ -559,8 +672,24 @@ namespace ONE_OF_NAMESPACE
 			return std::forward<FunctorDefault>(functorDefault)();
 		}
 
+		template<TPLT_TEMPLATE_ARGUMENTS_DECL(9, FunctorCase), typename FunctorDefault>
+		auto call_switch(TPLT_FUNCTION_ARGUMENTS_DECL(9, FunctorCase, , &&), FunctorDefault&& functorDefault) const
+			-> decltype(std::forward<FunctorCase_T1>(FunctorCase_t1)(*traits::get_at<0>(cmn::instance_of<traits::types>::value)))
+		{
+			ONE_OF_SWITCH_CASES(9, selector, FunctorCase);
+			return std::forward<FunctorDefault>(functorDefault)();
+		}
+
 		template<TPLT_TEMPLATE_ARGUMENTS_DECL(10, FunctorCase), typename FunctorDefault>
 		auto call_switch(TPLT_FUNCTION_ARGUMENTS_DECL(10, FunctorCase, , &&), FunctorDefault&& functorDefault)
+			-> decltype(std::forward<FunctorCase_T1>(FunctorCase_t1)(*traits::get_at<0>(cmn::instance_of<traits::types>::value)))
+		{
+			ONE_OF_SWITCH_CASES(10, selector, FunctorCase);
+			return std::forward<FunctorDefault>(functorDefault)();
+		}
+
+		template<TPLT_TEMPLATE_ARGUMENTS_DECL(10, FunctorCase), typename FunctorDefault>
+		auto call_switch(TPLT_FUNCTION_ARGUMENTS_DECL(10, FunctorCase, , &&), FunctorDefault&& functorDefault) const
 			-> decltype(std::forward<FunctorCase_T1>(FunctorCase_t1)(*traits::get_at<0>(cmn::instance_of<traits::types>::value)))
 		{
 			ONE_OF_SWITCH_CASES(10, selector, FunctorCase);
