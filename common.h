@@ -8,6 +8,21 @@
 
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
+#define TPLT_COMMA ,
+
+#define TPLT_NON_ZERO( Count, Argument) TPLT_NON_ZERO_ ## Count (Argument)
+#define TPLT_NON_ZERO_0( Argument )  
+#define TPLT_NON_ZERO_1( Argument )   Argument 
+#define TPLT_NON_ZERO_2( Argument )   Argument 
+#define TPLT_NON_ZERO_3( Argument )   Argument 
+#define TPLT_NON_ZERO_4( Argument )   Argument 
+#define TPLT_NON_ZERO_5( Argument )   Argument 
+#define TPLT_NON_ZERO_6( Argument )   Argument 
+#define TPLT_NON_ZERO_7( Argument )   Argument 
+#define TPLT_NON_ZERO_8( Argument )   Argument 
+#define TPLT_NON_ZERO_9( Argument )   Argument 
+#define TPLT_NON_ZERO_10( Argument )  Argument 
+
 #define TPLT_ARGUMENTS_CALL( Count, Argument) TPLT_ARGUMENTS_CALL_ ## Count (Argument)
 #define TPLT_ARGUMENTS_CALL_1( Argument )  Argument 
 #define TPLT_ARGUMENTS_CALL_2( Argument )  TPLT_ARGUMENTS_CALL_1( Argument ), Argument
@@ -21,6 +36,7 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #define TPLT_ARGUMENTS_CALL_10( Argument ) TPLT_ARGUMENTS_CALL_9( Argument ), Argument
 
 #define TPLT_TEMPLATE_ARGUMENTS_DECL( Count, Prefix ) TPLT_TEMPLATE_ARGUMENTS_DECL_ ## Count (Prefix)
+#define TPLT_TEMPLATE_ARGUMENTS_DECL_0( Prefix )  
 #define TPLT_TEMPLATE_ARGUMENTS_DECL_1( Prefix )  typename Prefix ## _T1 
 #define TPLT_TEMPLATE_ARGUMENTS_DECL_2( Prefix )  TPLT_TEMPLATE_ARGUMENTS_DECL_1( Prefix ), typename Prefix ## _T2 
 #define TPLT_TEMPLATE_ARGUMENTS_DECL_3( Prefix )  TPLT_TEMPLATE_ARGUMENTS_DECL_2( Prefix ), typename Prefix ## _T3 
@@ -68,6 +84,7 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #define TPLT_TEMPLATE_ARGUMENTS_CALL_TAIL_9( Prefix )  TPLT_TEMPLATE_ARGUMENTS_CALL_TAIL_8( Prefix ), Prefix ## _T10 
 
 #define TPLT_FUNCTION_ARGUMENTS_DECL( Count, Prefix, PreType, PostType ) TPLT_FUNCTION_ARGUMENTS_DECL_ ## Count (Prefix, PreType, PostType)
+#define TPLT_FUNCTION_ARGUMENTS_DECL_0( Prefix, PreType, PostType )  
 #define TPLT_FUNCTION_ARGUMENTS_DECL_1( Prefix, PreType, PostType )  PreType Prefix ## _T1 PostType Prefix ## _t1
 #define TPLT_FUNCTION_ARGUMENTS_DECL_2( Prefix, PreType, PostType )  TPLT_FUNCTION_ARGUMENTS_DECL_1( Prefix, PreType, PostType ), PreType Prefix ## _T2 PostType Prefix ## _t2
 #define TPLT_FUNCTION_ARGUMENTS_DECL_3( Prefix, PreType, PostType )  TPLT_FUNCTION_ARGUMENTS_DECL_2( Prefix, PreType, PostType ), PreType Prefix ## _T3 PostType Prefix ## _t3
@@ -92,6 +109,7 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #define TPLT_FUNCTION_ARGUMENTS_CALL_10( Prefix, PreVar, PostVar ) TPLT_FUNCTION_ARGUMENTS_CALL_9( Prefix, PreVar, PostVar ), PreVar Prefix ## _t10 PostVar 
 
 #define TPLT_FUNCTION_ARGUMENTS_CAST( Count, Prefix, Cast ) TPLT_FUNCTION_ARGUMENTS_CAST_ ## Count (Prefix, Cast)
+#define TPLT_FUNCTION_ARGUMENTS_CAST_0( Prefix, Cast )  
 #define TPLT_FUNCTION_ARGUMENTS_CAST_1( Prefix, Cast )  Cast <Prefix ## _T1>  (Prefix ## _t1)
 #define TPLT_FUNCTION_ARGUMENTS_CAST_2( Prefix, Cast )  TPLT_FUNCTION_ARGUMENTS_CAST_1( Prefix, Cast ), Cast <Prefix ## _T2>  (Prefix ## _t2)
 #define TPLT_FUNCTION_ARGUMENTS_CAST_3( Prefix, Cast )  TPLT_FUNCTION_ARGUMENTS_CAST_2( Prefix, Cast ), Cast <Prefix ## _T3>  (Prefix ## _t3)
@@ -104,6 +122,7 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #define TPLT_FUNCTION_ARGUMENTS_CAST_10( Prefix, Cast ) TPLT_FUNCTION_ARGUMENTS_CAST_9( Prefix, Cast ), Cast <Prefix ## _T10>  (Prefix ## _t10)
 
 #define TPLT_FUNCTION_ARGUMENT_INSTANCES( Count, ... ) TPLT_FUNCTION_ARGUMENT_INSTANCES_ ## Count (__VA_ARGS__)
+#define TPLT_FUNCTION_ARGUMENT_INSTANCES_0( A1 )  
 #define TPLT_FUNCTION_ARGUMENT_INSTANCES_1( A1 )  COMMON_NAMESPACE::instance_of<A1>::value
 #define TPLT_FUNCTION_ARGUMENT_INSTANCES_2( A1, A2 )  TPLT_FUNCTION_ARGUMENT_INSTANCES_1( A1 ),  COMMON_NAMESPACE::instance_of<A2>::value
 #define TPLT_FUNCTION_ARGUMENT_INSTANCES_3( A1, A2, A3 )  TPLT_FUNCTION_ARGUMENT_INSTANCES_2( A1, A2 ),  COMMON_NAMESPACE::instance_of<A3>::value

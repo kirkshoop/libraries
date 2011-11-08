@@ -375,7 +375,7 @@ namespace ONE_OF_NAMESPACE
 		{
 			reset();
 			detail::Move moveFunc;
-			other::traits::each(&other.storage, &other.selector, other.types, this, moveFunc);
+			one_of::traits::each(&other.storage, &other.selector, other.types, this, moveFunc);
 			return *this;
 		}
 

@@ -3,6 +3,14 @@
 #error WIN32_WINDOW_NAMESPACE must be defined
 #endif
 
+// missing from windowsx.h
+#ifndef HANDLE_WM_PRINTCLIENT
+/* void Cls_OnPrintClient(HWND hwnd, HDC hdc, DWORD flags) */
+#define HANDLE_WM_PRINTCLIENT(hwnd, wParam, lParam, fn) \
+    ((fn)(hwnd, (HDC)(wParam), (DWORD)(lParam)), 0L)
+#define FORWARD_WM_PRINTCLIENT(hwnd, hdc, flags, fn) \
+    (void)(fn)((hwnd), WM_PRINTCLIENT, (WPARAM)(HDC)(hdc), (LPARAM)(DWORD)(flags))
+#endif
 
 namespace WIN32_WINDOW_NAMESPACE
 {
@@ -51,10 +59,6 @@ namespace WIN32_WINDOW_NAMESPACE
 	template<typename WindowClassTag>
 	struct Context
 	{
-		typedef
-			typename window_class<WindowClassTag>::traits::type
-		Type;
-		Type* type;
 		HWND window;
 		UINT message;
 		WPARAM wParam;
@@ -74,37 +78,56 @@ namespace WIN32_WINDOW_NAMESPACE
 
 
 #define WINDOW_MESSAGE_OPTIONAL( CapitalMessage, CasedMessage, ParamCount, ...) \
-	template<typename WindowClassTag> \
+ \
+	struct optional ## CasedMessage ## Tag {}; \
+ \
+	template<typename WindowClassTag, typename Target> \
 	struct optional ## CasedMessage ## Choice \
 	{ \
-		optional ## CasedMessage ## Choice(Context<WindowClassTag>* contextArg) \
-			: context(contextArg) \
+		optional ## CasedMessage ## Choice(Target targetArg, Context<WindowClassTag>* contextArg) \
+			: target(targetArg) \
+	        , context(contextArg) \
 		{ } \
  \
-		template<TPLT_TEMPLATE_ARGUMENTS_DECL(ParamCount, Param)> \
-		LRESULT operator()(TPLT_FUNCTION_ARGUMENTS_DECL(ParamCount, Param, , &&)) \
+		TPLT_NON_ZERO(ParamCount, template<TPLT_TEMPLATE_ARGUMENTS_DECL(ParamCount, Param)>) \
+		LRESULT operator()(HWND TPLT_NON_ZERO(ParamCount, TPLT_COMMA TPLT_FUNCTION_ARGUMENTS_DECL(ParamCount, Param, , &&))) \
 		{ \
 			if (context->message == WM_ ## CapitalMessage) \
 			{ \
-				*context->handled = TRUE; \
-				*context->result = context->type->On ## CasedMessage (const_cast<const Context<WindowClassTag>*>(context), TPLT_FUNCTION_ARGUMENTS_CAST(ParamCount, Param, std::forward)); \
+			    window_message_error_contract( \
+					[&] \
+					{ \
+						*context->handled = TRUE; \
+						*context->result = target->On ## CasedMessage (*context TPLT_NON_ZERO(ParamCount, TPLT_COMMA TPLT_FUNCTION_ARGUMENTS_CAST(ParamCount, Param, std::forward))); \
+					}, \
+					*context, \
+					optional ## CasedMessage ## Tag(), \
+					WindowClassTag() \
+				); \
 			} \
-			return 0; \
+			return *context->result; \
 		} \
  \
+		Target target; \
 		Context<WindowClassTag>* context; \
 	}; \
  \
- 	template<typename WindowClassTag> \
-	optional ## CasedMessage ## Choice<WindowClassTag> optional ## CasedMessage(Context<WindowClassTag>* context, decltype(cmn::instance_of<typename Context<WindowClassTag>::Type>::value.On ## CasedMessage (cmn::instance_of<Context<WindowClassTag>*>::value, TPLT_FUNCTION_ARGUMENT_INSTANCES(ParamCount, __VA_ARGS__))) ) \
+ 	template<typename WindowClassTag, typename Target> \
+	optional ## CasedMessage ## Choice<WindowClassTag, Target> optional ## CasedMessage(Target target, Context<WindowClassTag>* context, decltype(cmn::instance_of<Target>::value->On ## CasedMessage (cmn::instance_of<Context<WindowClassTag>>::value TPLT_NON_ZERO(ParamCount, TPLT_COMMA TPLT_FUNCTION_ARGUMENT_INSTANCES(ParamCount, __VA_ARGS__)))) ) \
 	{ \
-		return optional ## CasedMessage ## Choice<WindowClassTag>(context); \
+		return optional ## CasedMessage ## Choice<WindowClassTag, Target>(target, context); \
 	} \
 \
 	inline nohandler optional ## CasedMessage (...) \
 	{ \
 		return nohandler(); \
-	}
+	} \
+ \
+	template<typename WindowClassTag, typename Target> \
+	LRESULT dispatch ## CasedMessage(Target target, Context<WindowClassTag>* context) \
+	{ \
+		return HANDLE_WM_ ## CapitalMessage(context->window, context->wParam, context->lParam, optional ## CasedMessage(target, context, 0)); \
+	} 
 
 #pragma warning(push)
 #pragma warning( disable : 4003) //not enough actual parameters for macro
@@ -202,29 +225,34 @@ namespace WIN32_WINDOW_NAMESPACE
 
 		if (message == WM_NCCREATE)
 		{
-			if (!optional_window_class_insert(hWnd, tag(), 0))
+			if (!optional_window_class_insert(hWnd, WindowClassTag(), 0))
 			{
 				return FALSE;
 			}
 		}
 
-		auto type = optional_window_class_find(hWnd, tag(), 0);
+		auto type = optional_window_class_find(hWnd, WindowClassTag(), 0);
+
+		ON_UNWIND_AUTO(
+			[&]
+			{
+				if (type && message == WM_NCDESTROY)
+				{
+					optional_window_class_erase(hWnd, type, WindowClassTag(), 0);
+				}
+			}
+		);
 
 		if (type)
 		{
-			Context<WindowClassTag> context = {type, hWnd, message, wParam, lParam, &handled, &result};
+			Context<WindowClassTag> context = {hWnd, message, wParam, lParam, &handled, &result};
 
 #			define WINDOW_MESSAGE_OPTIONAL( CapitalMessage, CasedMessage, ParamCount, ...) \
-						HANDLE_WM_ ## CapitalMessage(hWnd, wParam, lParam, optional ## CasedMessage(&context, 0));
+				dispatch ## CasedMessage(type, &context); 
 
 #			include "win32_messages.h"
 
 #			undef WINDOW_MESSAGE_OPTIONAL
-
-			if (message == WM_NCDESTROY)
-			{
-				optional_window_class_erase(hWnd, type, tag(), 0);
-			}
 
 			if (handled)
 			{
