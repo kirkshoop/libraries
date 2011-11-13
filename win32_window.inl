@@ -76,82 +76,9 @@ namespace WIN32_WINDOW_NAMESPACE
 
 namespace msg
 {
-
-#define WINDOW_MESSAGE_OPTIONAL( CapitalMessage, CasedMessage, ParamCount, ...) \
- \
-	struct optional ## CasedMessage ## Tag {}; \
- \
-    namespace detail \
-	{ \
- \
-		template<typename WindowClassTag, typename Target> \
-		struct optional ## CasedMessage ## Choice \
-		{ \
-			optional ## CasedMessage ## Choice(Target targetArg, const Context<WindowClassTag>* contextArg, BOOL* handledArg, LRESULT* resultArg) \
-				: target(targetArg) \
-				, context(contextArg) \
-				, handled(handledArg) \
-				, result(resultArg) \
-			{ } \
- \
-			TPLT_NON_ZERO(ParamCount, template<TPLT_TEMPLATE_ARGUMENTS_DECL(ParamCount, Param)>) \
-			LRESULT operator()(HWND TPLT_NON_ZERO(ParamCount, TPLT_COMMA TPLT_FUNCTION_ARGUMENTS_DECL(ParamCount, Param, , &&))) \
-			{ \
-				if (context->message == WM_ ## CapitalMessage) \
-				{ \
-					window_message_error_contract( \
-						[&] \
-						{ \
-							*handled = TRUE; \
-							*result = target->On ## CasedMessage (*context TPLT_NON_ZERO(ParamCount, TPLT_COMMA TPLT_FUNCTION_ARGUMENTS_CAST(ParamCount, Param, std::forward))); \
-						}, \
-						*context, \
-						optional ## CasedMessage ## Tag(), \
-						WindowClassTag() \
-					); \
-				} \
-				return *result; \
-			} \
- \
-			Target target; \
-			const Context<WindowClassTag>* context; \
-			BOOL* handled; \
-			LRESULT* result; \
-		}; \
- \
- 		template<typename WindowClassTag, typename Target> \
-		optional ## CasedMessage ## Choice<WindowClassTag, Target> optional ## CasedMessage(Target target, Context<WindowClassTag>* context, BOOL* handled, LRESULT* result, decltype(cmn::instance_of<Target>::value->On ## CasedMessage (cmn::instance_of<Context<WindowClassTag>>::value TPLT_NON_ZERO(ParamCount, TPLT_COMMA TPLT_FUNCTION_ARGUMENT_INSTANCES(ParamCount, __VA_ARGS__)))) ) \
-		{ \
-			return optional ## CasedMessage ## Choice<WindowClassTag, Target>(target, context, handled, result); \
-		} \
- \
-		inline nohandler optional ## CasedMessage (...) \
-		{ \
-			return nohandler(); \
-		} \
- \
-		template<typename WindowClassTag, typename Target> \
-		void dispatch ## CasedMessage(Target target, const Context<WindowClassTag>& context, BOOL* handled, LRESULT* result) \
-		{ \
-			HANDLE_WM_ ## CapitalMessage(context.window, context.wParam, context.lParam, detail::optional ## CasedMessage(target, &context, handled, result, 0)); \
-		} \
-	} \
- \
-	template<typename WindowClassTag, typename Target> \
-	std::pair<bool, LRESULT> dispatch ## CasedMessage(Target target, const Context<WindowClassTag>& context) \
-	{ \
-		BOOL handled = FALSE; \
-		LRESULT result = 0; \
-		detail::dispatch ## CasedMessage(target, context, &handled, &result); \
-		return std::make_pair(!!handled, result); \
-	} 
-
-#pragma warning(push)
-#pragma warning( disable : 4003) //not enough actual parameters for macro
-#include "win32_messages.h"
-#pragma warning (pop)
-
-#undef WINDOW_MESSAGE_OPTIONAL
+#	define WINDOW_MESSAGE_DEFINE_OPTIONAL
+#	include "win32_messages.h"
+#	undef WINDOW_MESSAGE_DEFINE_OPTIONAL
 
 	template<typename WindowClassTag, typename Target>
 	std::pair<bool, LRESULT> dispatch(Target target, const Context<WindowClassTag>& context)
@@ -159,12 +86,9 @@ namespace msg
 		BOOL handled = FALSE;
 		LRESULT result = 0;
 
-#define WINDOW_MESSAGE_OPTIONAL( CapitalMessage, CasedMessage, ParamCount, ...) \
-				msg::detail::dispatch ## CasedMessage(target, context, &handled, &result); 
-
-#include "win32_messages.h"
-
-#undef WINDOW_MESSAGE_OPTIONAL
+#		define WINDOW_MESSAGE_DEFINE_DISPATCH
+#		include "win32_messages.h"
+#		undef WINDOW_MESSAGE_DEFINE_DISPATCH
 
 		return std::make_pair(!!handled, result);
 	}
