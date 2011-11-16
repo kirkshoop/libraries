@@ -11,10 +11,18 @@ namespace WIN32_WINDOW_NAMESPACE
 	namespace cmn=COMMON_NAMESPACE;
 
 	template<typename Type>
-	struct window_class_traits_builder
+	struct traits_builder
 	{
 		typedef
 			Type
+		type;
+	};
+
+	template<typename WindowClassTag>
+	struct traits
+	{
+		typedef
+			decltype(window_class_traits(WindowClassTag()))
 		type;
 	};
 
@@ -27,7 +35,7 @@ namespace WIN32_WINDOW_NAMESPACE
 		tag;
 
 		typedef
-			decltype(window_class_traits(tag()))
+			typename traits<tag>::type
 		traits;
 
 		static ATOM Register();
