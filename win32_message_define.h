@@ -31,11 +31,11 @@
 				HWND 
 				TPLT_NON_ZERO(WINDOW_MESSAGE_PARAMETER_COUNT, TPLT_COMMA TPLT_FUNCTION_ARGUMENTS_DECL(WINDOW_MESSAGE_PARAMETER_COUNT, Param, , &&)))
 			{
+				LRESULT result = 0;
 				window_message_error_contract(
 					[&]
 					{
-						*handled = TRUE;
-						*result = target->WINDOW_MESSAGE_TARGET_METHOD(
+						result = target->WINDOW_MESSAGE_TARGET_METHOD(
 							*context 
 							TPLT_NON_ZERO(WINDOW_MESSAGE_PARAMETER_COUNT, TPLT_COMMA TPLT_FUNCTION_ARGUMENTS_CAST(WINDOW_MESSAGE_PARAMETER_COUNT, Param, std::forward)));
 					},
@@ -43,15 +43,16 @@
 					WINDOW_MESSAGE_TAG(),
 					WindowClassTag()
 				);
-				return *result;
+				return result;
 			}
 
 			std::pair<bool, LRESULT> dispatch()
 			{
 				if (context->message == WINDOW_MESSAGE_MACRO)
 				{
-					WINDOW_MESSAGE_HANDLER(context->window, context->wParam, context->lParam, *this);
-					return std::make_pair(*handled ? true : false, *result);
+					LRESULT result = 0;
+					result = WINDOW_MESSAGE_HANDLER(context->window, context->wParam, context->lParam, *this);
+					return std::make_pair(true, result);
 				}
 				else
 				{
@@ -66,9 +67,7 @@
  		template<typename WindowClassTag, typename Target>
 		WINDOW_MESSAGE_CHOICE<WindowClassTag, Target> WINDOW_MESSAGE_OPTIONAL(
 			Target target, 
-			const Context<WindowClassTag>* context, 
-			BOOL* handled, 
-			LRESULT* result, 
+			const Context<WindowClassTag>* context,
 			decltype(
 				cmn::instance_of<Target>::value->WINDOW_MESSAGE_TARGET_METHOD(
 					cmn::instance_of<Context<WindowClassTag>>::value 
@@ -77,7 +76,7 @@
 			) 
 		)
 		{
-			return WINDOW_MESSAGE_CHOICE<WindowClassTag, Target>(base<WindowClassTag, Target>(target, context, handled, result));
+			return WINDOW_MESSAGE_CHOICE<WindowClassTag, Target>(base<WindowClassTag, Target>(target, context));
 		}
 
 		inline nohandler WINDOW_MESSAGE_OPTIONAL(...)
@@ -85,20 +84,12 @@
 			return nohandler();
 		}
 
-		template<typename WindowClassTag, typename Target>
-		void WINDOW_MESSAGE_DISPATCH(Target target, const Context<WindowClassTag>& context, BOOL* handled, LRESULT* result)
-		{
-			std::tie(*handled, *result) = detail::WINDOW_MESSAGE_OPTIONAL(target, &context, handled, result, 0).dispatch();
-		}
 	}
 
 	template<typename WindowClassTag, typename Target>
 	std::pair<bool, LRESULT> WINDOW_MESSAGE_DISPATCH(Target target, const Context<WindowClassTag>& context)
 	{
-		BOOL handled = FALSE;
-		LRESULT result = 0;
-		detail::WINDOW_MESSAGE_DISPATCH(target, context, &handled, &result);
-		return std::make_pair(!!handled, result);
+		return detail::WINDOW_MESSAGE_OPTIONAL(target, context).dispatch();
 	} 
 
 #	undef WINDOW_MESSAGE_PARAMETER_INSTANCES
@@ -115,7 +106,7 @@
 
 #	define WINDOW_MESSAGE_OPTIONAL TPLT_CALL(MAKE_IDENTIFIER_EXPLICIT, (optional, WINDOW_MESSAGE_CASED_NAME))
 
-	, detail::generator<WindowClassTag, Target, decltype(detail::WINDOW_MESSAGE_OPTIONAL(cmn::instance_of<Target>::value, cmn::instance_of<Context<WindowClassTag>*>::value, cmn::instance_of<BOOL*>::value, cmn::instance_of<LRESULT*>::value, 0)) 
+	, detail::generator<WindowClassTag, Target, decltype(detail::WINDOW_MESSAGE_OPTIONAL(cmn::instance_of<Target>::value, cmn::instance_of<Context<WindowClassTag>*>::value, 0)) 
 
 #	undef WINDOW_MESSAGE_OPTIONAL 
 

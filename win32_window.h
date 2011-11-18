@@ -27,6 +27,9 @@ namespace WIN32_WINDOW_NAMESPACE
 	};
 
 	template<typename WindowClassTag>
+	LRESULT CALLBACK WindowCallback(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
+	template<typename WindowClassTag>
 	class window_class
 	{
 	public:
@@ -44,9 +47,6 @@ namespace WIN32_WINDOW_NAMESPACE
 		static ATOM Register(T&& t);
 
 	private:
-		static LRESULT CALLBACK WindowCallback(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-		static LRESULT CALLBACK WindowCallbackSafe(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-
 		~window_class();
 		window_class();
 		window_class(window_class&);

@@ -5,8 +5,10 @@
 
 namespace WIN32_WINDOW_NAMESPACE
 {
+
 	namespace detail
 	{
+
 		template<typename T>
 		struct raw_ptr
 		{
@@ -32,7 +34,7 @@ namespace WIN32_WINDOW_NAMESPACE
 		window_class_register(&wcex, tag());
 
 		// not overridable
-		wcex.lpfnWndProc = WindowCallback;
+		wcex.lpfnWndProc = WindowCallback<WindowClassTag>;
 
 		return RegisterClassEx(&wcex);
 	}
@@ -53,7 +55,7 @@ namespace WIN32_WINDOW_NAMESPACE
 		window_class_register(std::forward<T>(t), &wcex, tag());
 
 		// not overridable
-		wcex.lpfnWndProc = WindowCallback;
+		wcex.lpfnWndProc = WindowCallback<WindowClassTag>;
 
 		return RegisterClassEx(&wcex);
 	}
@@ -67,153 +69,156 @@ namespace WIN32_WINDOW_NAMESPACE
 		LPARAM lParam;
 	};
 
-namespace msg
-{
-	namespace detail
+	namespace msg
 	{
-		struct nohandler
+		namespace detail
 		{
-			inline
-			LRESULT operator()(...)
+			struct nohandler
 			{
-				return 0;
+				inline
+				LRESULT operator()(...)
+				{
+					return 0;
+				}
+
+				std::pair<bool, LRESULT> dispatch()
+				{
+					return std::make_pair(false, 0);
+				}
+			};
+		}
+
+		struct UnhandledTag {};
+
+		template<typename WindowClassTag, typename Target>
+		std::pair<bool, LRESULT> optionalUnhandled(
+			Target target, 
+			const Context<WindowClassTag>& context, 
+			decltype(
+				cmn::instance_of<Target>::value->OnUnhandled(
+					cmn::instance_of<Context<WindowClassTag>>::value 
+				)
+			) 
+		)
+		{
+			LRESULT result = 0;
+			window_message_error_contract(
+				[&]
+				{
+					result = target->OnUnhandled(context);
+				},
+				context,
+				UnhandledTag(),
+				WindowClassTag()
+			);
+			return std::make_pair(true, result);
+		}
+
+		inline std::pair<bool, LRESULT> optionalUnhandled(...)
+		{
+			return std::make_pair(false, 0);
+		}
+
+		template<typename WindowClassTag, typename Target>
+		struct base
+		{
+
+			~base() {}
+			base(Target targetArg, const Context<WindowClassTag>* contextArg)
+				: target(targetArg)
+				, context(contextArg)
+			{}
+			base(base&& other)
+				: target(std::move(other.target))
+				, context(std::move(other.context))
+			{}
+			base& operator=(base other)
+			{
+				using std::swap;
+				swap(other.target, target);
+				swap(other.context, context);
 			}
 
 			std::pair<bool, LRESULT> dispatch()
 			{
 				return std::make_pair(false, 0);
 			}
+
+			Target target;
+			const Context<WindowClassTag>* context;
 		};
-	}
 
-	struct UnhandledTag {};
+#		define WINDOW_MESSAGE_DEFINE_OPTIONAL
+#		include "win32_messages.h"
+#		undef WINDOW_MESSAGE_DEFINE_OPTIONAL
 
-	template<typename WindowClassTag, typename Target>
-	std::pair<bool, LRESULT> optionalUnhandled(
-		Target target, 
-		const Context<WindowClassTag>& context, 
-		decltype(
-			cmn::instance_of<Target>::value->OnUnhandled(
-				cmn::instance_of<Context<WindowClassTag>>::value 
-			)
-		) 
-	)
-	{
-		LRESULT result = 0;
-		window_message_error_contract(
-			[&]
+		namespace detail
+		{
+			template<typename WindowClassTag, typename Target>
+			struct generator_end
 			{
-				result = target->OnUnhandled(context);
-			},
-			context,
-			UnhandledTag(),
-			WindowClassTag()
-		);
-		return std::make_pair(true, result);
-	}
+				typedef
+					base<WindowClassTag, Target>
+				type;
+			};
 
-	inline std::pair<bool, LRESULT> optionalUnhandled(...)
-	{
-		return std::make_pair(false, 0);
-	}
+			template<typename WindowClassTag, typename Target, typename MessageChoice, typename Base = generator_end<WindowClassTag, Target>>
+			struct generator;
 
-	template<typename WindowClassTag, typename Target>
-	struct base
-	{
-		typedef
-			base
-		type;
+			template<typename WindowClassTag, typename Target, template<typename A, typename B, typename C> class MessageChoice, typename Base>
+			struct generator<WindowClassTag, Target, MessageChoice<WindowClassTag, Target, base<WindowClassTag, Target>>, Base>
+				: public Base
+			{
+				typedef
+					MessageChoice<WindowClassTag, Target, typename Base::type>
+				type;
+			};
 
-		~base() {}
-		base(Target targetArg, const Context<WindowClassTag>* contextArg, BOOL* handledArg, LRESULT* resultArg)
-			: target(targetArg)
-			, context(contextArg)
-			, handled(handledArg)
-			, result(resultArg)
-		{}
-		base(base&& other)
-			: target(std::move(other.target))
-			, context(std::move(other.context))
-			, handled(std::move(other.handled))
-			, result(std::move(other.result))
-		{}
-		base& operator=(base other)
-		{
-			using std::swap;
-			swap(other.target, target);
-			swap(other.context, context);
-			swap(other.handled, handled);
-			swap(other.result, result);
+			template<typename WindowClassTag, typename Target, typename Base>
+			struct generator<WindowClassTag, Target, nohandler, Base>
+				: public Base
+			{
+			};
+
+			template<typename WindowClassTag, typename Target, typename Base>
+			struct generator_root
+				: public Base
+			{
+			};
 		}
 
-		std::pair<bool, LRESULT> dispatch()
-		{
-			std::tie(*handled, *result) = optionalUnhandled(target, *context);
-			return std::make_pair(*handled ? true : false, *result);
-		}
-
-		Target target;
-		const Context<WindowClassTag>* context;
-		BOOL* handled;
-		LRESULT* result;
-	};
-
-#	define WINDOW_MESSAGE_DEFINE_OPTIONAL
-#	include "win32_messages.h"
-#	undef WINDOW_MESSAGE_DEFINE_OPTIONAL
-
-	namespace detail
-	{
-		template<typename WindowClassTag, typename Target, typename MessageChoice, typename Base = base<WindowClassTag, Target>>
-		struct generator;
-
-		template<typename WindowClassTag, typename Target, template<typename A, typename B, typename C> class MessageChoice, typename Base>
-		struct generator<WindowClassTag, Target, MessageChoice<WindowClassTag, Target, base<WindowClassTag, Target>>, Base>
-			: public Base
+		template<typename WindowClassTag, typename Target>
+		struct generator
 		{
 			typedef
-				MessageChoice<WindowClassTag, Target, typename Base::type>
+				typename detail::generator_root<WindowClassTag, Target
+#		define WINDOW_MESSAGE_DEFINE_BEGIN_GENERATOR
+#		include "win32_messages.h"
+#		undef WINDOW_MESSAGE_DEFINE_BEGIN_GENERATOR
+
+#		define WINDOW_MESSAGE_DEFINE_END_GENERATOR
+#		include "win32_messages.h"
+#		undef WINDOW_MESSAGE_DEFINE_END_GENERATOR
+				>::type
 			type;
 		};
 
-		template<typename WindowClassTag, typename Target, typename Base>
-		struct generator<WindowClassTag, Target, nohandler, Base>
-			: public Base
+		template<typename WindowClassTag, typename Target>
+		std::pair<bool, LRESULT> dispatch(Target target, const Context<WindowClassTag>& context)
 		{
-		};
+			BOOL handled = FALSE;
+			LRESULT result = 0;
+			std::tie(handled, result) = generator<WindowClassTag, Target>::type(base<WindowClassTag, Target>(target, &context)).dispatch();
 
-		template<typename WindowClassTag, typename Target, typename Base>
-		struct generator_root
-			: public Base
-		{
-		};
+			if (!handled)
+			{
+				std::tie(handled, result) = optionalUnhandled(target, context);
+			}
+
+			return std::make_pair(handled ? true : false, result);
+		}
+
 	}
-
-	template<typename WindowClassTag, typename Target>
-	struct generator
-	{
-		typedef
-			typename detail::generator_root<WindowClassTag, Target
-#	define WINDOW_MESSAGE_DEFINE_BEGIN_GENERATOR
-#	include "win32_messages.h"
-#	undef WINDOW_MESSAGE_DEFINE_BEGIN_GENERATOR
-
-#	define WINDOW_MESSAGE_DEFINE_END_GENERATOR
-#	include "win32_messages.h"
-#	undef WINDOW_MESSAGE_DEFINE_END_GENERATOR
-			>::type
-		type;
-	};
-
-	template<typename WindowClassTag, typename Target>
-	std::pair<bool, LRESULT> dispatch(Target target, const Context<WindowClassTag>& context)
-	{
-		BOOL handled = FALSE;
-		LRESULT result = 0;
-		return generator<WindowClassTag, Target>::type(base<WindowClassTag, Target>(target, &context, &handled, &result)).dispatch();
-	}
-
-}
 
  	template<typename WindowClassTag> 
 	auto optional_window_class_construct(HWND hwnd, LPCREATESTRUCT createStruct, WindowClassTag&&, int) -> decltype(window_class_construct(hwnd, createStruct, WindowClassTag()))
@@ -308,72 +313,76 @@ namespace msg
 		delete type.raw;
 	}
 
+	namespace detail
+	{
+		template<typename WindowClassTag>
+		LRESULT CALLBACK WindowCallbackSafe(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+		{
+			bool handled = false;
+			LRESULT result = 0;
+
+			if (message == WM_NCCREATE)
+			{
+				auto existingType = optional_window_class_find(hWnd, WindowClassTag(), 0);
+				if  (!existingType)
+				{
+					if (!optional_window_class_insert(
+							hWnd, 
+							optional_window_class_construct(
+								hWnd, 
+								reinterpret_cast<LPCREATESTRUCT>(lParam), 
+								WindowClassTag(), 
+								0
+							),
+							WindowClassTag(), 
+							0
+						)
+					)
+					{
+						return FALSE;
+					}
+				}
+			}
+
+			auto type = optional_window_class_find(hWnd, WindowClassTag(), 0);
+
+			ON_UNWIND_AUTO(
+				[&]
+				{
+					if (type && message == WM_NCDESTROY)
+					{
+						optional_window_class_erase(hWnd, type, WindowClassTag(), 0);
+						optional_window_class_destroy(hWnd, type, WindowClassTag(), 0);
+					}
+				}
+			);
+
+			if (type)
+			{
+				Context<WindowClassTag> context = {hWnd, message, wParam, lParam};
+
+				std::tie(handled, result) = msg::dispatch(type, context);
+				if (handled)
+				{
+					return result;
+				}
+			}
+
+			return DefWindowProc(hWnd, message, wParam, lParam);
+		}
+	}
+
 	template<typename WindowClassTag>
-	//static 
-	LRESULT CALLBACK window_class<WindowClassTag>::WindowCallback(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+	LRESULT CALLBACK WindowCallback(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		__try
 		{
-			return WindowCallbackSafe(hWnd, message, wParam, lParam);
+			return detail::WindowCallbackSafe<WindowClassTag>(hWnd, message, wParam, lParam);
 		}
 		__except(cmn::FailFastFilter(GetExceptionInformation()))
 		{
 		}
 		return 0;
-	}
-
-	template<typename WindowClassTag>
-	//static 
-	LRESULT CALLBACK window_class<WindowClassTag>::WindowCallbackSafe(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-	{
-		bool handled = false;
-		LRESULT result = 0;
-
-		if (message == WM_NCCREATE)
-		{
-			if (
-				!optional_window_class_insert(
-					hWnd, 
-					optional_window_class_construct(
-						hWnd, 
-						reinterpret_cast<LPCREATESTRUCT>(lParam), 
-						WindowClassTag(), 
-						0
-					),
-					WindowClassTag(), 
-					0
-				)
-			)
-			{
-				return FALSE;
-			}
-		}
-
-		auto type = optional_window_class_find(hWnd, WindowClassTag(), 0);
-
-		ON_UNWIND_AUTO(
-			[&]
-			{
-				if (type && message == WM_NCDESTROY)
-				{
-					optional_window_class_erase(hWnd, type, WindowClassTag(), 0);
-					optional_window_class_destroy(hWnd, type, WindowClassTag(), 0);
-				}
-			}
-		);
-
-		if (type)
-		{
-			Context<WindowClassTag> context = {hWnd, message, wParam, lParam};
-
-			std::tie(handled, result) = msg::dispatch(type, context);
-			if (handled)
-			{
-				return result;
-			}
-		}
-
-		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
 
 }
