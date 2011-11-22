@@ -221,13 +221,21 @@ namespace WIN32_WINDOW_NAMESPACE
 	}
 
  	template<typename WindowClassTag> 
-	auto optional_window_class_construct(HWND hwnd, LPCREATESTRUCT createStruct, WindowClassTag&&, int) -> decltype(window_class_construct(hwnd, createStruct, WindowClassTag()))
+	std::unique_ptr<typename window_class<WindowClassTag>::traits::type> 
+	optional_window_class_constructor(LPCREATESTRUCT createStruct, decltype(new (std::nothrow) window_class<WindowClassTag>::traits::type(cmn::instance_of<CREATESTRUCT>::value)))
 	{ 
-		return window_class_construct(hwnd, createStruct, WindowClassTag());
+		typedef
+			typename window_class<WindowClassTag>::traits::type
+		Type;
+
+		std::unique_ptr<Type> type(new (std::nothrow) Type(*createStruct));
+
+		return std::move(type);
 	} 
 
- 	template<typename WindowClassTag> 
-	std::unique_ptr<typename window_class<WindowClassTag>::traits::type> optional_window_class_construct(HWND , LPCREATESTRUCT , WindowClassTag&&, ...) 
+	template<typename WindowClassTag> 
+	std::unique_ptr<typename window_class<WindowClassTag>::traits::type> 
+	optional_window_class_constructor(LPCREATESTRUCT , ...) 
 	{ 
 		typedef
 			typename window_class<WindowClassTag>::traits::type
@@ -238,14 +246,40 @@ namespace WIN32_WINDOW_NAMESPACE
 		return std::move(type);
 	}
 
+	template<typename WindowClassTag> 
+	decltype(
+		window_class_construct(
+			cmn::instance_of<HWND>::value, 
+			cmn::instance_of<LPCREATESTRUCT>::value, 
+			WindowClassTag())) 
+	optional_window_class_construct(HWND hwnd, LPCREATESTRUCT createStruct, WindowClassTag&&, int)
+	{ 
+		return window_class_construct(hwnd, createStruct, WindowClassTag());
+	} 
+
+ 	template<typename WindowClassTag> 
+	std::unique_ptr<typename window_class<WindowClassTag>::traits::type> 
+	optional_window_class_construct(HWND , LPCREATESTRUCT createStruct, WindowClassTag&&, ...) 
+	{ 
+		return optional_window_class_constructor<WindowClassTag>(createStruct, 0);
+	}
+
 	template<typename WindowClassTag, typename T> 
-	auto optional_window_class_insert(HWND hwnd, T t, WindowClassTag&&, int) -> decltype(window_class_insert(hwnd, WindowClassTag()))
+	decltype(
+		window_class_insert(
+			cmn::instance_of<HWND>::value, 
+			WindowClassTag())) 
+	optional_window_class_insert(HWND hwnd, T t, WindowClassTag&&, int) 
 	{ 
 		return window_class_insert(hwnd, std::move(t), WindowClassTag());
 	} 
 
  	template<typename WindowClassTag> 
-	bool optional_window_class_insert(HWND hwnd, std::unique_ptr<typename window_class<WindowClassTag>::traits::type> type, WindowClassTag&&, ...) 
+	bool optional_window_class_insert(
+		HWND hwnd, 
+		std::unique_ptr<typename window_class<WindowClassTag>::traits::type> type, 
+		WindowClassTag&&, 
+		...) 
 	{ 
 		if (!type)
 		{
@@ -275,13 +309,18 @@ namespace WIN32_WINDOW_NAMESPACE
 	}
 
  	template<typename WindowClassTag> 
-	auto optional_window_class_find(HWND hwnd, WindowClassTag&&, int) -> decltype(window_class_find(hwnd, WindowClassTag()))
+	decltype(
+		window_class_find(
+			cmn::instance_of<HWND>::value, 
+			WindowClassTag())) 
+	optional_window_class_find(HWND hwnd, WindowClassTag&&, int)
 	{ 
 		return window_class_find(hwnd, WindowClassTag());
 	} 
 
  	template<typename WindowClassTag> 
-	detail::raw_ptr<typename window_class<WindowClassTag>::traits::type> optional_window_class_find(HWND hwnd, WindowClassTag&&, ...) 
+	detail::raw_ptr<typename window_class<WindowClassTag>::traits::type> 
+	optional_window_class_find(HWND hwnd, WindowClassTag&&, ...) 
 	{ 
 		typedef
 			typename window_class<WindowClassTag>::traits::type
@@ -290,7 +329,12 @@ namespace WIN32_WINDOW_NAMESPACE
 	}
 
  	template<typename Type, typename WindowClassTag> 
-	auto optional_window_class_erase(HWND hwnd, Type type, WindowClassTag&&, int) -> decltype(window_class_erase(hwnd, type, WindowClassTag()))
+	decltype(
+		window_class_erase(
+			cmn::instance_of<HWND>::value, 
+			cmn::instance_of<Type>::value, 
+			WindowClassTag())) 
+	optional_window_class_erase(HWND hwnd, Type type, WindowClassTag&&, int) 
 	{ 
 		return window_class_erase(hwnd, type, WindowClassTag());
 	} 
@@ -302,7 +346,12 @@ namespace WIN32_WINDOW_NAMESPACE
 	}
 
 	template<typename Type, typename WindowClassTag> 
-	auto optional_window_class_destroy(HWND hwnd, Type type, WindowClassTag&&, int) -> decltype(window_class_erase(hwnd, type, WindowClassTag()))
+	decltype(
+		window_class_erase(
+			cmn::instance_of<HWND>::value, 
+			cmn::instance_of<Type>::value, 
+			WindowClassTag())) 
+	optional_window_class_destroy(HWND hwnd, Type type, WindowClassTag&&, int) 
 	{ 
 		return window_class_erase(hwnd, type, WindowClassTag());
 	} 
