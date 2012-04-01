@@ -21,7 +21,7 @@ namespace COM_NAMESPACE
 				{
 					ifset::interface_cast<Interface>(that)->AddRef();
 					*outInterface = ifset::interface_cast<Interface>(that);
-					return unique_hresult::cast(S_OK);
+					return hresult_cast(S_OK);
 				}
 				return Base::qi(that, riid, outInterface);
 			}
@@ -32,7 +32,7 @@ namespace COM_NAMESPACE
 		{
 			static unique_hresult qi(ComUnknown* , REFIID , void** )
 			{
-				return unique_hresult::cast(E_NOINTERFACE);
+				return hresult_cast(E_NOINTERFACE);
 			}
 		};
 
@@ -97,7 +97,31 @@ namespace COM_NAMESPACE
 								typename ifset::traits<ComObjectTag>::type::interfaces::end
 							>::type
 						qi_interface;
-						return qi_interface::qi(this, riid, ppvObject);
+						unique_hresult hresult(hresult_cast(E_NOINTERFACE));
+
+						if (InlineIsEqualGUID(IID_IUnknown, riid))
+						{
+							// ensure that IUnknown is sent to the outer object
+							hresult = interface_storage(
+								storage_get(),
+								ifset::interface_tag<IUnknown>(), 
+								ComObjectTag()
+							)->outer_qi(riid, ppvObject);
+						}
+						if (hresult == hresult_cast(E_NOINTERFACE))
+						{
+							hresult = qi_interface::qi(this, riid, ppvObject);
+						}
+						if (hresult == hresult_cast(E_NOINTERFACE))
+						{
+							// pass unsupported interface requests to the outer object
+							hresult = interface_storage(
+								storage_get(),
+								ifset::interface_tag<IUnknown>(), 
+								ComObjectTag()
+							)->outer_qi(riid, ppvObject);
+						}
+						return hresult;
 					}, 
 					ifset::interface_tag<IUnknown>(), 
 					ComObjectTag()
@@ -135,6 +159,13 @@ namespace COM_NAMESPACE
 		void interface_constructed(IUnknown*, ifset::interface_tag<IUnknown>&&) 
 		{}
 
+		unique_hresult outer_qi( 
+			REFIID riid,
+			void** ppvObject)
+		{
+			return hresult_cast(E_NOINTERFACE);
+		}
+
 		ULONG increment()
 		{
 			return ++count;
@@ -151,6 +182,57 @@ namespace COM_NAMESPACE
 		}
 
 		ULONG count;
+	};
+
+	struct aggregating_refcount
+	{
+		virtual ~aggregating_refcount() {}
+
+		aggregating_refcount()
+			: count(1)
+		{}
+
+		aggregating_refcount(IUnknown* outerArg)
+			: count(1)
+			, outer(outerArg)
+		{
+			if (outer)
+			{
+				outer->AddRef();
+			}
+		}
+
+		void interface_constructed(IUnknown*, ifset::interface_tag<IUnknown>&&) 
+		{}
+
+		unique_hresult outer_qi( 
+			REFIID riid,
+			void** ppvObject)
+		{
+			if (outer)
+			{
+				return hresult_cast(outer->QueryInterface(riid, ppvObject));
+			}
+			return hresult_cast(E_NOINTERFACE);
+		}
+
+		ULONG increment()
+		{
+			return ++count;
+		}
+
+		ULONG decrement_and_destroy(aggregating_refcount* that)
+		{
+			auto result = --count;
+			if (result == 0)
+			{
+				delete that;
+			}
+			return result;
+		}
+
+		ULONG count;
+		WINDOWS_RESOURCES_NAMESPACE::unique_com_unknown outer;
 	};
 
 	template<typename Interface, typename InterfaceSet>

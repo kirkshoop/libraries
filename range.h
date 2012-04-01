@@ -380,26 +380,26 @@ namespace RANGE_NAMESPACE
 
 	template< class Range >
 	auto
-	make_range_raw( Range&& r ) -> decltype(RANGE_NAMESPACE::make_range(&r[0], &r[0] + RANGE_NAMESPACE::size(r)))
+	make_range_raw( Range&& r ) -> decltype(RANGE_NAMESPACE::make_range(&std::forward<Range>(r)[0], &std::forward<Range>(r)[0] + RANGE_NAMESPACE::size(std::forward<Range>(r))))
 	{
 		if (RANGE_NAMESPACE::size(r) == 0)
 		{
-			decltype(RANGE_NAMESPACE::make_range(&r[0], &r[0] + RANGE_NAMESPACE::size(r))) result;
+			decltype(RANGE_NAMESPACE::make_range(&std::forward<Range>(r)[0], &std::forward<Range>(r)[0] + RANGE_NAMESPACE::size(std::forward<Range>(r)))) result;
 			return result;
 		}
-		return RANGE_NAMESPACE::make_range(&r[0], &r[0] + RANGE_NAMESPACE::size(r));
+		return RANGE_NAMESPACE::make_range(&std::forward<Range>(r)[0], &std::forward<Range>(r)[0] + RANGE_NAMESPACE::size(std::forward<Range>(r)));
 	}
 
 	template< class Range >
 	auto
 	make_range_raw( Range&& r,	typename range_difference<Range>::type advance_begin,
 								typename range_difference<Range>::type advance_end ) 
-		-> decltype(RANGE_NAMESPACE::make_range(&r[0], &r[0] + RANGE_NAMESPACE::size(r)))
+		-> decltype(RANGE_NAMESPACE::make_range(&std::forward<Range>(r)[0], &std::forward<Range>(r)[0] + RANGE_NAMESPACE::size(std::forward<Range>(r))))
 	{
-		decltype(RANGE_NAMESPACE::make_range(&r[0], &r[0] + RANGE_NAMESPACE::size(r))) result;
-		if (RANGE_NAMESPACE::size(r) != 0)
+		decltype(RANGE_NAMESPACE::make_range(&std::forward<Range>(r)[0], &std::forward<Range>(r)[0] + RANGE_NAMESPACE::size(std::forward<Range>(r)))) result;
+		if (RANGE_NAMESPACE::size(std::forward<Range>(r)) != 0)
 		{
-			result = RANGE_NAMESPACE::make_range(&r[0], &r[0] + RANGE_NAMESPACE::size(r));
+			result = RANGE_NAMESPACE::make_range(&std::forward<Range>(r)[0], &std::forward<Range>(r)[0] + RANGE_NAMESPACE::size(std::forward<Range>(r)));
 		}
 		result.advance_begin(advance_begin); 
 		result.advance_end(advance_end); 

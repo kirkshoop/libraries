@@ -33,6 +33,7 @@
 
 #define COM_NAMESPACE nscom
 #include "com_unknown.h"
+#include "com_classfactory.h"
 
 #define WIN32_WINDOW_NAMESPACE nswin32window
 #include "win32_window.h"

@@ -19,9 +19,9 @@ namespace UNIQUE_RESOURCE_NAMESPACE
 		template<typename ResourceTag>
 		struct resource_type
 		{
-				typedef
-						decltype(unique_resource_invalid(ResourceTag()))
-				type;
+			typedef
+				decltype(unique_resource_invalid(ResourceTag()))
+			type;
 		};
 
 		template<typename ResourceTag, typename ResourceType>

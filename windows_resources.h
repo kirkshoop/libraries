@@ -34,8 +34,7 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 		{
 			struct tag {};
 			inline HANDLE unique_resource_invalid(tag&&) { return INVALID_HANDLE_VALUE; }
-			inline void unique_resource_reset(HANDLE resource, tag&&) { 
-				CloseHandle(resource); }
+			inline void unique_resource_reset(HANDLE resource, tag&&) { CloseHandle(resource); }
 		}
 	}
 	typedef
@@ -46,6 +45,25 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 	auto winerror_and_file(HANDLE result) -> decltype(detail::winerror_and_resource<unique_file>(result))
 	{
 		return detail::winerror_and_resource<unique_file>(result);
+	}
+
+	namespace detail
+	{
+		namespace winevent
+		{
+			struct tag {};
+			inline HANDLE unique_resource_invalid(tag&&) { return NULL; }
+			inline void unique_resource_reset(HANDLE resource, tag&&) { CloseHandle(resource); }
+		}
+	}
+	typedef
+		UNIQUE_RESOURCE_NAMESPACE::unique_resource<detail::winevent::tag>
+	unique_event;
+
+	inline
+	auto winerror_and_event(HANDLE result) -> decltype(detail::winerror_and_resource<unique_event>(result))
+	{
+		return detail::winerror_and_resource<unique_event>(result);
 	}
 
 	namespace detail
