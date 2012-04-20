@@ -212,7 +212,7 @@ namespace WIN32_WINDOW_NAMESPACE
 
 			if (!handled)
 			{
-				std::tie(handled, result) = optionalUnhandled(target, context);
+				std::tie(handled, result) = optionalUnhandled(target, context, 0);
 			}
 
 			return std::make_pair(handled ? true : false, result);
