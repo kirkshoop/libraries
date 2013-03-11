@@ -160,8 +160,8 @@ namespace COM_NAMESPACE
 		{}
 
 		unique_hresult outer_qi( 
-			REFIID riid,
-			void** ppvObject)
+			REFIID,// riid,
+			void**)// ppvObject)
 		{
 			return hresult_cast(E_NOINTERFACE);
 		}

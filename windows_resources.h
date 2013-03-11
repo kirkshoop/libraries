@@ -124,6 +124,23 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 		UNIQUE_RESOURCE_NAMESPACE::unique_resource<detail::gdi_end_paint::tag>
 	unique_gdi_end_paint;
 
+#ifdef __WINCRYPT_H__
+
+	namespace detail
+	{
+		namespace cert_free_context
+		{
+			struct tag {};
+			inline PCCERT_CONTEXT unique_resource_invalid(tag&&) { return nullptr; }
+			inline void unique_resource_reset(PCCERT_CONTEXT resource, tag&&) { CertFreeCertificateContext(resource); }
+		}
+	}
+	typedef
+		UNIQUE_RESOURCE_NAMESPACE::unique_resource<detail::cert_free_context::tag>
+	unique_cert_free_context;
+
+#endif // __WINCRYPT_H__
+
 #pragma warning(push)
 #pragma warning(disable:4345) //  behavior change: an object of POD type constructed with an initializer of the form () will be default-initialized
 	namespace detail
