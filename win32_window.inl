@@ -69,157 +69,6 @@ namespace WIN32_WINDOW_NAMESPACE
 		LPARAM lParam;
 	};
 
-	namespace msg
-	{
-		namespace detail
-		{
-			struct nohandler
-			{
-				inline
-				LRESULT operator()(...)
-				{
-					return 0;
-				}
-
-				std::pair<bool, LRESULT> dispatch()
-				{
-					return std::make_pair(false, 0);
-				}
-			};
-		}
-
-		struct UnhandledTag {};
-
-		template<typename WindowClassTag, typename Target>
-		std::pair<bool, LRESULT> optionalUnhandled(
-			Target target, 
-			const Context<WindowClassTag>& context, 
-			decltype(
-				cmn::instance_of<Target>::value->OnUnhandled(
-					cmn::instance_of<Context<WindowClassTag>>::value 
-				)
-			) 
-		)
-		{
-			LRESULT result = 0;
-			window_message_error_contract(
-				[&]
-				{
-					result = target->OnUnhandled(context);
-				},
-				context,
-				UnhandledTag(),
-				WindowClassTag()
-			);
-			return std::make_pair(true, result);
-		}
-
-		inline std::pair<bool, LRESULT> optionalUnhandled(...)
-		{
-			return std::make_pair(false, 0);
-		}
-
-		template<typename WindowClassTag, typename Target>
-		struct base
-		{
-
-			~base() {}
-			base(Target targetArg, const Context<WindowClassTag>* contextArg)
-				: target(targetArg)
-				, context(contextArg)
-			{}
-			base(base&& other)
-				: target(std::move(other.target))
-				, context(std::move(other.context))
-			{}
-			base& operator=(base other)
-			{
-				using std::swap;
-				swap(other.target, target);
-				swap(other.context, context);
-			}
-
-			std::pair<bool, LRESULT> dispatch()
-			{
-				return std::make_pair(false, 0);
-			}
-
-			Target target;
-			const Context<WindowClassTag>* context;
-		};
-
-#		define WINDOW_MESSAGE_DEFINE_OPTIONAL
-#		include "win32_messages.h"
-#		undef WINDOW_MESSAGE_DEFINE_OPTIONAL
-
-		namespace detail
-		{
-			template<typename WindowClassTag, typename Target>
-			struct generator_end
-			{
-				typedef
-					base<WindowClassTag, Target>
-				type;
-			};
-
-			template<typename WindowClassTag, typename Target, typename MessageChoice, typename Base = generator_end<WindowClassTag, Target>>
-			struct generator;
-
-			template<typename WindowClassTag, typename Target, template<typename A, typename B, typename C> class MessageChoice, typename Base>
-			struct generator<WindowClassTag, Target, MessageChoice<WindowClassTag, Target, base<WindowClassTag, Target>>, Base>
-				: public Base
-			{
-				typedef
-					MessageChoice<WindowClassTag, Target, typename Base::type>
-				type;
-			};
-
-			template<typename WindowClassTag, typename Target, typename Base>
-			struct generator<WindowClassTag, Target, nohandler, Base>
-				: public Base
-			{
-			};
-
-			template<typename WindowClassTag, typename Target, typename Base>
-			struct generator_root
-				: public Base
-			{
-			};
-		}
-
-		template<typename WindowClassTag, typename Target>
-		struct generator
-		{
-			typedef
-				typename detail::generator_root<WindowClassTag, Target
-#		define WINDOW_MESSAGE_DEFINE_BEGIN_GENERATOR
-#		include "win32_messages.h"
-#		undef WINDOW_MESSAGE_DEFINE_BEGIN_GENERATOR
-
-#		define WINDOW_MESSAGE_DEFINE_END_GENERATOR
-#		include "win32_messages.h"
-#		undef WINDOW_MESSAGE_DEFINE_END_GENERATOR
-				>::type
-			type;
-		};
-
-		template<typename WindowClassTag, typename Target>
-		std::pair<bool, LRESULT> dispatch(Target target, const Context<WindowClassTag>& context)
-		{
-			BOOL handled = FALSE;
-			LRESULT result = 0;
-			std::tie(handled, result) = generator<WindowClassTag, Target>::type(base<WindowClassTag, Target>(target, &context)).dispatch();
-
-			if (!handled)
-			{
-				std::tie(handled, result) = optionalUnhandled(target, context, 0);
-			}
-
-			return std::make_pair(handled ? true : false, result);
-		}
-
-	}
-
  	template<typename WindowClassTag> 
 	std::unique_ptr<typename window_class<WindowClassTag>::traits::type> 
 	optional_window_class_constructor(LPCREATESTRUCT createStruct, decltype(new (std::nothrow) window_class<WindowClassTag>::traits::type(cmn::instance_of<CREATESTRUCT>::value)))
@@ -347,19 +196,50 @@ namespace WIN32_WINDOW_NAMESPACE
 
 	template<typename Type, typename WindowClassTag> 
 	decltype(
-		window_class_erase(
+		window_class_destroy(
 			cmn::instance_of<HWND>::value, 
 			cmn::instance_of<Type>::value, 
 			WindowClassTag())) 
 	optional_window_class_destroy(HWND hwnd, Type type, WindowClassTag&&, int) 
 	{ 
-		return window_class_erase(hwnd, type, WindowClassTag());
+		return window_class_destroy(hwnd, type, WindowClassTag());
 	} 
 
  	template<typename Type, typename WindowClassTag> 
 	void optional_window_class_destroy(HWND , detail::raw_ptr<Type> type, WindowClassTag&&, ...) 
 	{ 
 		delete type.raw;
+	}
+
+    template<typename Type, typename WindowClassTag> 
+	decltype(
+		window_class_dispatch(
+			cmn::instance_of<Type>::value, 
+            cmn::instance_of<Context<WindowClassTag>>::value,
+			WindowClassTag())) 
+	optional_window_class_dispatch(Type type, const Context<WindowClassTag>& context, WindowClassTag&&, int) 
+	{ 
+        return window_message_error_contract(
+            [type] (const Context<WindowClassTag>& context) 
+            {
+                return window_class_dispatch(type, context, WindowClassTag());
+            },
+            context,
+            WindowClassTag()
+        );
+	} 
+
+ 	template<typename Type, typename WindowClassTag> 
+	std::pair<bool, LRESULT> optional_window_class_dispatch(detail::raw_ptr<Type> type, const Context<WindowClassTag>& context, WindowClassTag&&, ...) 
+	{ 
+        return window_message_error_contract(
+            [type] (const Context<WindowClassTag>& context) 
+            {
+                return type->window_proc(context.window, context.message, context.wParam, context.LParam);
+            },
+            context,
+            WindowClassTag()
+        );
 	}
 
 	namespace detail
@@ -410,7 +290,7 @@ namespace WIN32_WINDOW_NAMESPACE
 			{
 				Context<WindowClassTag> context = {hWnd, message, wParam, lParam};
 
-				std::tie(handled, result) = msg::dispatch(type, context);
+				std::tie(handled, result) = optional_window_class_dispatch(type, context, WindowClassTag(), 0);
 				if (handled)
 				{
 					return result;

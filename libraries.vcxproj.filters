@@ -60,12 +60,6 @@
     <ClInclude Include="win32_etw.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="win32_message_define.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="win32_messages.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="win32_window.h">
       <Filter>Header Files</Filter>
     </ClInclude>

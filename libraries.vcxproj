@@ -88,8 +88,6 @@
     <ClInclude Include="unique_winerror.h" />
     <ClInclude Include="unwinder.h" />
     <ClInclude Include="win32_etw.h" />
-    <ClInclude Include="win32_messages.h" />
-    <ClInclude Include="win32_message_define.h" />
     <ClInclude Include="win32_window.h" />
     <ClInclude Include="windows_resources.h" />
   </ItemGroup>
