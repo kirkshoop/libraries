@@ -228,9 +228,11 @@ namespace WIN32_WINDOW_NAMESPACE
             WindowClassTag()
         );
 	} 
+    
+    typedef std::pair<bool, LRESULT> dispatch_result;
 
- 	template<typename Type, typename WindowClassTag> 
-	std::pair<bool, LRESULT> optional_window_class_dispatch(detail::raw_ptr<Type> type, const Context<WindowClassTag>& context, WindowClassTag&&, ...) 
+    template<typename Type, typename WindowClassTag> 
+	dispatch_result optional_window_class_dispatch(detail::raw_ptr<Type> type, const Context<WindowClassTag>& context, WindowClassTag&&, ...) 
 	{ 
         return window_message_error_contract(
             [type] (const Context<WindowClassTag>& context) 
