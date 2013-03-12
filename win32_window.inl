@@ -71,20 +71,20 @@ namespace WIN32_WINDOW_NAMESPACE
 
  	template<typename WindowClassTag> 
 	std::unique_ptr<typename window_class<WindowClassTag>::traits::type> 
-	optional_window_class_constructor(LPCREATESTRUCT createStruct, decltype(new (std::nothrow) window_class<WindowClassTag>::traits::type(cmn::instance_of<CREATESTRUCT>::value)))
+	optional_window_class_constructor(HWND hwnd, LPCREATESTRUCT createStruct, decltype(new (std::nothrow) window_class<WindowClassTag>::traits::type(cmn::instance_of<HWND>::value, cmn::instance_of<CREATESTRUCT>::value)))
 	{ 
 		typedef
 			typename window_class<WindowClassTag>::traits::type
 		Type;
 
-		std::unique_ptr<Type> type(new (std::nothrow) Type(*createStruct));
+		std::unique_ptr<Type> type(new (std::nothrow) Type(hwnd, *createStruct));
 
 		return std::move(type);
 	} 
 
 	template<typename WindowClassTag> 
 	std::unique_ptr<typename window_class<WindowClassTag>::traits::type> 
-	optional_window_class_constructor(LPCREATESTRUCT , ...) 
+	optional_window_class_constructor(HWND , LPCREATESTRUCT , ...) 
 	{ 
 		typedef
 			typename window_class<WindowClassTag>::traits::type
@@ -108,9 +108,9 @@ namespace WIN32_WINDOW_NAMESPACE
 
  	template<typename WindowClassTag> 
 	std::unique_ptr<typename window_class<WindowClassTag>::traits::type> 
-	optional_window_class_construct(HWND , LPCREATESTRUCT createStruct, WindowClassTag&&, ...) 
+	optional_window_class_construct(HWND hwnd, LPCREATESTRUCT createStruct, WindowClassTag&&, ...) 
 	{ 
-		return optional_window_class_constructor<WindowClassTag>(createStruct, 0);
+		return optional_window_class_constructor<WindowClassTag>(hwnd, createStruct, 0);
 	}
 
 	template<typename WindowClassTag, typename T> 
