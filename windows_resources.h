@@ -85,6 +85,25 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 		return detail::winerror_and_resource<unique_close_window>(result);
 	}
 
+    namespace detail
+	{
+		namespace destroy_window
+		{
+			struct tag {};
+			inline HWND unique_resource_invalid(tag&&) { return NULL; }
+			inline void unique_resource_reset(HWND resource, tag&&) { DestroyWindow(resource); }
+		}
+	}
+	typedef
+		UNIQUE_RESOURCE_NAMESPACE::unique_resource<detail::destroy_window::tag>
+	unique_destroy_window;
+
+	inline
+	auto winerror_and_destroy_window(HWND result) -> decltype(detail::winerror_and_resource<unique_destroy_window>(result))
+	{
+		return detail::winerror_and_resource<unique_destroy_window>(result);
+	}
+
 	namespace detail
 	{
 		namespace gdi_delete_dc
