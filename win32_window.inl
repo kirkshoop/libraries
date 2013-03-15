@@ -274,23 +274,25 @@ namespace WIN32_WINDOW_NAMESPACE
 			if (message == WM_NCCREATE)
 			{
 				auto existingType = optional_window_class_find(hWnd, WindowClassTag(), 0);
-				if  (!existingType)
+				if  (existingType)
 				{
-					if (!optional_window_class_insert(
+                    // the slot where we would store our type instance is full. abort.
+                    return FALSE;
+                }
+				if (!optional_window_class_insert(
+						hWnd, 
+						optional_window_class_construct(
 							hWnd, 
-							optional_window_class_construct(
-								hWnd, 
-								reinterpret_cast<LPCREATESTRUCT>(lParam), 
-								WindowClassTag(), 
-								0
-							),
+							reinterpret_cast<LPCREATESTRUCT>(lParam), 
 							WindowClassTag(), 
 							0
-						)
+						),
+						WindowClassTag(), 
+						0
 					)
-					{
-						return FALSE;
-					}
+				)
+				{
+					return FALSE;
 				}
 			}
 
