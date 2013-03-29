@@ -163,6 +163,31 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 		UNIQUE_RESOURCE_NAMESPACE::unique_resource<detail::gdi_end_paint::tag>
 	unique_gdi_end_paint;
 
+	namespace detail
+	{
+		namespace gdi_destroy_object
+		{
+			struct tag {};
+			inline HGDIOBJ unique_resource_invalid(tag&&) { return HGDIOBJ(NULL); }
+			inline void unique_resource_reset(HGDIOBJ resource, tag&&) { DeleteObject(resource); }
+		}
+	}
+	typedef
+		UNIQUE_RESOURCE_NAMESPACE::unique_resource<detail::gdi_destroy_object::tag>
+	unique_gdi_object;
+
+    namespace detail
+	{
+		namespace gdi_brush
+		{
+			struct tag : public gdi_destroy_object::tag {};
+			inline HBRUSH unique_resource_invalid(tag&&) { return HBRUSH(NULL); }
+		}
+	}
+	typedef
+		UNIQUE_RESOURCE_NAMESPACE::unique_resource<detail::gdi_brush::tag>
+	unique_gdi_brush;
+
 #ifdef __WINCRYPT_H__
 
 	namespace detail
