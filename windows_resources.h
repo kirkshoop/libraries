@@ -137,6 +137,43 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 		return detail::winerror_and_resource<unique_destroy_window>(result);
 	}
 
+    namespace detail
+	{
+		namespace remove_window_subclass
+		{
+			struct tag {};
+			struct type 
+			{
+				HWND window;
+				UINT_PTR id;
+				SUBCLASSPROC proc;
+			};
+			bool operator == (const type& lhs, const type& rhs) 
+			{
+				return lhs.window == rhs.window && lhs.id == rhs.id && lhs.proc == rhs.proc;
+			}
+			inline type unique_resource_invalid(tag&&) { 
+				detail::remove_window_subclass::type empty = {nullptr, 0L, 0L};
+				return empty; }
+			inline void unique_resource_reset(type resource, tag&&) { 
+                RemoveWindowSubclass(resource.window, resource.proc, resource.id); }
+		}
+	}
+	typedef
+		UNIQUE_RESOURCE_NAMESPACE::unique_resource<detail::remove_window_subclass::tag>
+	unique_remove_window_subclass;
+
+	inline
+	unique_remove_window_subclass set_window_subclass(HWND window, SUBCLASSPROC proc, UINT_PTR id, DWORD_PTR data = 0L)
+	{
+		if (SetWindowSubclass(window, proc, id, data))
+		{
+			detail::remove_window_subclass::type subclass = {window, id, proc};
+			return unique_remove_window_subclass(subclass);
+		}
+		return unique_remove_window_subclass();
+	}
+
 	namespace detail
 	{
 		namespace gdi_delete_dc

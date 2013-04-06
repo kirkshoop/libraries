@@ -337,4 +337,61 @@ namespace WIN32_WINDOW_NAMESPACE
 		return 0;
 	}
 
+	template<typename WindowClassTag>
+	struct SubclassContext
+	{
+		HWND window;
+		UINT message;
+		WPARAM wParam;
+		LPARAM lParam;
+		UINT_PTR id;
+		DWORD_PTR data;
+	};
+
+	namespace detail
+	{
+		template<typename WindowSubclassTag>
+		LRESULT CALLBACK WindowSubclassCallbackSafe(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+		{
+			bool handled = false;
+			LRESULT result = 0;
+
+			SubclassContext<WindowSubclassTag> context = {hWnd, message, wParam, lParam, uIdSubclass, dwRefData};
+
+	        std::tie(handled, result) = window_message_error_contract(
+	            [] (const SubclassContext<WindowSubclassTag>& context) 
+	            {
+	                return window_subclass_dispatch(context, WindowSubclassTag());
+	            },
+	            context,
+	            WindowSubclassTag()
+	        );
+			if (handled)
+			{
+				return result;
+			}
+
+			return DefSubclassProc(hWnd, message, wParam, lParam);
+		}
+	}
+
+	template<typename WindowSubclassTag>
+	LRESULT CALLBACK WindowSubclassCallback(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+	{
+		__try
+		{
+			return detail::WindowSubclassCallbackSafe<WindowSubclassTag>(hWnd, message, wParam, lParam, uIdSubclass, dwRefData);
+		}
+		__except(cmn::FailFastFilter(GetExceptionInformation()))
+		{
+		}
+		return 0;
+	}
+
+	template<typename WindowSubclassTag>
+	WINDOWS_RESOURCES_NAMESPACE::unique_remove_window_subclass set_window_subclass(HWND window, INT_PTR id, DWORD_PTR data)
+	{
+		return WINDOWS_RESOURCES_NAMESPACE::set_window_subclass(window, WindowSubclassCallback<WindowSubclassTag>, id, data);
+	}
+
 }
