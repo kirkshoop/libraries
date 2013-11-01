@@ -88,6 +88,19 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 
 	namespace detail
 	{
+		namespace close_key
+		{
+			struct tag {};
+			inline HKEY unique_resource_invalid(tag&&) { return NULL; }
+			inline void unique_resource_reset(HKEY resource, tag&&) { RegCloseKey(resource); }
+		}
+	}
+	typedef
+		UNIQUE_RESOURCE_NAMESPACE::unique_resource<detail::close_key::tag>
+	unique_close_key;
+
+	namespace detail
+	{
 		namespace close_window
 		{
 			struct tag {};
@@ -701,7 +714,7 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 
 		SetLastError(ERROR_SUCCESS);
 
-		int loadResult = LoadStringW(instance, id, space.begin(), space.size());
+		int loadResult = LoadStringW(instance, id, space.begin(), static_cast<int>(space.size()));
 
 		auto winerror = make_winerror_if(TRUE);
 
