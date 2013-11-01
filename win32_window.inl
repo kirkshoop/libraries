@@ -375,6 +375,7 @@ namespace WIN32_WINDOW_NAMESPACE
 		}
 	}
 
+#ifdef _INC_COMMCTRL
 	template<typename WindowSubclassTag>
 	LRESULT CALLBACK WindowSubclassCallback(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 	{
@@ -393,5 +394,6 @@ namespace WIN32_WINDOW_NAMESPACE
 	{
 		return WINDOWS_RESOURCES_NAMESPACE::set_window_subclass(window, WindowSubclassCallback<WindowSubclassTag>, id, data);
 	}
+#endif
 
 }

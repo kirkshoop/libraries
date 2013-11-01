@@ -72,11 +72,13 @@ namespace WIN32_WINDOW_NAMESPACE
 		window_class& operator=(window_class&);
 	};
 
+#ifdef _INC_COMMCTRL
 	template<typename WindowSubclassTag>
 	LRESULT CALLBACK WindowSubclassCallback(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
 	template<typename WindowSubclassTag>
 	WINDOWS_RESOURCES_NAMESPACE::unique_remove_window_subclass set_window_subclass(HWND window, INT_PTR id = 0L, DWORD_PTR data = 0L);
+#endif
 }
 
 #include "win32_window.inl"

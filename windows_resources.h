@@ -137,6 +137,7 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 		return detail::winerror_and_resource<unique_destroy_window>(result);
 	}
 
+#ifdef _INC_COMMCTRL
     namespace detail
 	{
 		namespace remove_window_subclass
@@ -173,6 +174,7 @@ namespace WINDOWS_RESOURCES_NAMESPACE
 		}
 		return unique_remove_window_subclass();
 	}
+#endif
 
 	namespace detail
 	{
